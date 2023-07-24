@@ -12,6 +12,7 @@ const SEND_BIRD_API_TOKEN = '8b42407cfe3aee731bb99d546148e8c6ff46173a';
 
 // Function to parse the payload
 function parsePayload(payload) {
+  console.log(payload)
   let event = {};
   try {
     event = JSON.parse(payload.event.replace(/(\w+):/g, '"$1":'));
@@ -49,11 +50,12 @@ async function addToChannel(channelUrl, userId) {
 app.post('/tickets', async (req, res) => {
   try {
     const parsedData = parsePayload(req.body);
+    
     const channelUrl = `freshdesk_${parsedData.ticket_id}`;
     console.log(channelUrl)
   
-    await removeFromChannel(channelUrl, parsedData.event_responder_id_from.toString());
-    await addToChannel(channelUrl, parsedData.event_responder_id_to.toString());
+    if(parsedData.event_responder_id_from !== null) await removeFromChannel(channelUrl, parsedData.event_responder_id_from.toString());
+    if(parsedData.event_responder_id_to !== null)   await addToChannel(channelUrl, parsedData.event_responder_id_to.toString());
   
     console.log(JSON.stringify(parsedData, null, 2));
     res.send('Received and parsed your request!');
