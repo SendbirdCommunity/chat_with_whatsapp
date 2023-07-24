@@ -30,7 +30,9 @@ function parsePayload(payload) {
 
 // Helper function to remove a user from a SendBird channel
 async function removeFromChannel(channelUrl, userId) {
-  await axios.delete(`${SEND_BIRD_API_BASE_URL}/group_channels/${channelUrl}/leave/${userId}`, {
+  await axios.put(`${SEND_BIRD_API_BASE_URL}/group_channels/${channelUrl}/leave`,{
+    user_ids: [userId]
+  }, {
     headers: { 'Api-Token': SEND_BIRD_API_TOKEN }
   });
 }
@@ -48,6 +50,7 @@ app.post('/tickets', async (req, res) => {
   try {
     const parsedData = parsePayload(req.body);
     const channelUrl = `freshdesk_${parsedData.ticket_id}`;
+    console.log(channelUrl)
   
     await removeFromChannel(channelUrl, parsedData.event_responder_id_from.toString());
     await addToChannel(channelUrl, parsedData.event_responder_id_to.toString());
