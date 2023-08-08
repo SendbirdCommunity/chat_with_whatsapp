@@ -51,21 +51,21 @@ app.post('/tickets', async (req, res) => {
   
   console.log("Working", req.body)
 
-//   try {
-//     const parsedData = parsePayload(req.body);
+  try {
+    const parsedData = parsePayload(req.body);
     
-//     const channelUrl = `freshdesk_${parsedData.ticket_id}`;
-//     console.log(channelUrl)
+    const channelUrl = `freshdesk_${parsedData.ticket_id}`;
+    console.log(channelUrl)
   
-//     if(parsedData.event_responder_id_from !== null) await removeFromChannel(channelUrl, parsedData.event_responder_id_from.toString());
-//     if(parsedData.event_responder_id_to !== null)   await addToChannel(channelUrl, parsedData.event_responder_id_to.toString());
+    if(parsedData.event_responder_id_from !== null) await removeFromChannel(channelUrl, parsedData.event_responder_id_from.toString());
+    if(parsedData.event_responder_id_to !== null)   await addToChannel(channelUrl, parsedData.event_responder_id_to.toString());
   
-//     console.log(JSON.stringify(parsedData, null, 2));
-//     res.send('Received and parsed your request!');
-//   } catch (error) {
-//     console.error('Error processing request:', error);
-//     res.status(500).send('Error processing request.');
-//   }
+    console.log(JSON.stringify(parsedData, null, 2));
+    res.send('Received and parsed your request!');
+  } catch (error) {
+    console.error('Error processing request:', error);
+    res.status(500).send('Error processing request.');
+  }
 });
 
 app.listen(3000, () => console.log('Server started on port 3000'));
