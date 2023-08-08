@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 
 const app = express();
-// app.use(express.json());
+app.use(express.json());
 
 // SendBird API Base URL
 const SEND_BIRD_API_BASE_URL = 'https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3';
