@@ -1,7 +1,7 @@
 {
-  "name": "glitch-hello-node",
+  "name": "sendbird_freshdesk_chat_webhook_server",
   "version": "0.1.0",
-  "description": "A simple Node app built on fastify, instantly up and running. Built to be remixed on Glitch.com.",
+  "description": "A simple Node app built on fastify, instantly up and running.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -11,14 +11,7 @@
     "axios": "^1.4.0"
   },
   "engines": {
-    "node": "14.x"
+    "node": "18.x"
   },
-  "repository": {
-    "url": "https://glitch.com/edit/#!/glitch-hello-node"
-  },
-  "license": "MIT",
-  "keywords": [
-    "node",
-    "glitch"
-  ]
+  "license": "MIT"
 }

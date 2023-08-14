@@ -58,7 +58,6 @@ async function addToChannel(channelUrl, userId) {
 }
 
 app.post("/tickets", async (req, res) => {
-
   try {
     const parsedData = parsePayload(req.body);
 
