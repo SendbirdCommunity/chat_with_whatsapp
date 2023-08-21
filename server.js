@@ -14,7 +14,6 @@ const SEND_BIRD_API_TOKEN = API_TOKEN;
 
 // Function to parse the payload
 function parsePayload(payload) {
-  console.log(payload);
   let event = {};
   try {
     event = JSON.parse(payload.event.replace(/(\w+):/g, '"$1":'));
@@ -22,11 +21,13 @@ function parsePayload(payload) {
     console.error("Error parsing event:", e);
   }
 
+  console.log(payload)
+  
   return {
     ticket_id: payload.ticket_id,
     new_agent_email: payload.new_agent_email,
-    event_responder_id_from: event.responder_id?.from,
-    event_responder_id_to: event.responder_id?.to,
+    event_responder_id_from: event.responder_id.from,
+    event_responder_id_to: event.responder_id.to,
     sender_id: payload.sender_id,
   };
 }
