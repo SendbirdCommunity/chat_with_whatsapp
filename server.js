@@ -84,7 +84,7 @@ app.post("/new_ticket_webhook", async (req, res) => {
   
   const data = req.body.data
   const eventType = req.body.eventType
-  if (eventType != 'TICKET.STATUS.UPDATED') return res.status(400).send("Not ticket create webhook")
+  if (eventType != 'TICKET.CREATED') return res.status(400).send("Not ticket create webhook")
   
   
   //Invite the bot to the channel to continue the conversation. 
