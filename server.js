@@ -47,7 +47,12 @@ async function removeFromChannel(channelUrl, userId) {
 
 // Helper function to add a user to a SendBird channel
 
-
+app.post("/remove_from_channel", async(req, res) => {
+  
+      console.log(req)
+  
+  
+})
 
 async function inviteBotToChannel(channelUrl, botId) {
   const endpoint = `https://api-${APP_ID}.sendbird.com/v3/group_channels/${channelUrl}/invite`;
