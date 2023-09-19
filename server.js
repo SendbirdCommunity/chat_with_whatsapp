@@ -47,10 +47,10 @@ async function removeFromChannel(channelUrl, userId) {
 
 // Helper function to add a user to a SendBird channel
 
-app.post("/remove_from_channel", async(req, res) => {
+app.post("/messages", async(req, res) => {
   
-      console.log(req)
-  
+      cosnt sender_id = console.log(req.body.sender.user_id)
+      res.status(200).send(200)
   
 })
 
