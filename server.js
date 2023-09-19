@@ -49,7 +49,14 @@ async function removeFromChannel(channelUrl, userId) {
 
 app.post("/messages", async(req, res) => {
   
-      cosnt sender_id = console.log(req.body.sender.user_id)
+      const senderId = req.body.sender.user_id
+      if(senderId.indexOf('bot') >= 0) {
+        const messageData = JSON.parse(req.body.payload.data)
+        console.log(messageData)
+        if(!messageData.function_calls){
+          console.log(messageData.function_calls)
+        }
+      }
       res.status(200).send(200)
   
 })
