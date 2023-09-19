@@ -58,19 +58,42 @@ async function addToChannel(channelUrl, userId) {
   );
 }
 
+
+async function inviteBotToChannel(channelUrl, botId) {
+  const endpoint = `https://api-885C2616-DBF8-4BDC-9178-4A1A662614E3.sendbird.com/v3/group_channels/${channelUrl}/invite`;
+  const headers = {
+    'Content-Type': 'application/json',
+    'Api-Token': "b123c52ddea972d5b7f7fb1667b247b7ecc681a4"
+  };
+  const data = {
+    user_ids: [botId]
+  };
+
+  try {
+    const response = await axios.post(endpoint, data, { headers: headers });
+    return response.data;
+  } catch (error) {
+    console.log(error)
+    throw new Error(`Failed to invite bot. Status: ${error.response.status}. Response: ${error.response.data}`);
+  }
+}
+
+
 app.post("/new_ticket_webhook", async (req, res) => {
   console.log("working")
   
-  console.log(req.body)
   const data = req.body.data
   const eventType = req.body.eventType
   if (eventType != 'TICKET.STATUS.UPDATED') return res.status(400).send("Not ticket create webhook")
-  res.status(200).send("OK")
+  
   
   //Invite the bot to the channel to continue the conversation. 
   const channelUrl = data.channelUrl
   const botId = "ticket_bot_1"
+  const sendInvite = await inviteBotToChannel(channelUrl, botId)
   //Send a channel invite using Sendbird's Platform API. 
+  console.log(sendInvite)
+  res.status(200).send("OK")
 });
 
 app.listen(3000, () => console.log("Server started on port 3000"));
