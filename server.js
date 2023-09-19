@@ -46,24 +46,14 @@ async function removeFromChannel(channelUrl, userId) {
 }
 
 // Helper function to add a user to a SendBird channel
-async function addToChannel(channelUrl, userId) {
-  await axios.post(
-    `${SEND_BIRD_API_BASE_URL}/group_channels/${channelUrl}/invite`,
-    {
-      user_ids: [userId],
-    },
-    {
-      headers: { "Api-Token": SEND_BIRD_API_TOKEN },
-    }
-  );
-}
+
 
 
 async function inviteBotToChannel(channelUrl, botId) {
-  const endpoint = `https://api-885C2616-DBF8-4BDC-9178-4A1A662614E3.sendbird.com/v3/group_channels/${channelUrl}/invite`;
+  const endpoint = `https://api-${APP_ID}.sendbird.com/v3/group_channels/${channelUrl}/invite`;
   const headers = {
     'Content-Type': 'application/json',
-    'Api-Token': "b123c52ddea972d5b7f7fb1667b247b7ecc681a4"
+    'Api-Token': { "Api-Token": API_TOKEN }
   };
   const data = {
     user_ids: [botId]
@@ -80,7 +70,7 @@ async function inviteBotToChannel(channelUrl, botId) {
 
 
 app.post("/new_ticket_webhook", async (req, res) => {
-  console.log("working")
+
   
   const data = req.body.data
   const eventType = req.body.eventType
