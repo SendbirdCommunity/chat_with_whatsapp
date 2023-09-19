@@ -58,29 +58,19 @@ async function addToChannel(channelUrl, userId) {
   );
 }
 
-app.post("/tickets", async (req, res) => {
-  try {
-    const parsedData = parsePayload(req.body);
-
-    const channelUrl = `freshdesk_${parsedData.ticket_id}`;
-    console.log(channelUrl);
-
-    if (parsedData.event_responder_id_from !== null)
-      await removeFromChannel(
-        channelUrl,
-        parsedData.event_responder_id_from.toString()
-      );
-    if (parsedData.event_responder_id_to !== null)
-      await addToChannel(
-        channelUrl,
-        parsedData.event_responder_id_to.toString()
-      );
-
-    res.send("Received and parsed your request!");
-  } catch (error) {
-    console.error("Error processing request:", error);
-    res.status(500).send("Error processing request.");
-  }
+app.post("/new_ticket_webhook", async (req, res) => {
+  console.log("working")
+  
+  console.log(req.body)
+  const data = req.body.data
+  const eventType = req.body.eventType
+  if (eventType != 'TICKET.STATUS.UPDATED') return res.status(400).send("Not ticket create webhook")
+  res.status(200).send("OK")
+  
+  //Invite the bot to the channel to continue the conversation. 
+  const channelUrl = data.channelUrl
+  const botId = "ticket_bot_1"
+  //Send a channel invite using Sendbird's Platform API. 
 });
 
 app.listen(3000, () => console.log("Server started on port 3000"));
