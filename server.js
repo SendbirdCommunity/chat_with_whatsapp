@@ -33,31 +33,36 @@ function parsePayload(payload) {
 }
 
 // Helper function to remove a user from a SendBird channel
-async function removeFromChannel(channelUrl, userId) {
-  await axios.put(
-    `${SEND_BIRD_API_BASE_URL}/group_channels/${channelUrl}/leave`,
-    {
-      user_ids: [userId],
-    },
-    {
+async function updateChannel(channelUrl, data) {
+  try {
+      await axios.put(
+    `${SEND_BIRD_API_BASE_URL}/group_channels/${channelUrl}`,{data},{
       headers: { "Api-Token": SEND_BIRD_API_TOKEN },
     }
-  );
+  );    
+  } catch(e) {
+    console.log("FAILED TO UPDATE CHANNEL", e)
+  }
+
 }
 
 // Helper function to add a user to a SendBird channel
 
 app.post("/messages", async(req, res) => {
   
-      console.log(req.body.channel)
-  
+      const channelUrl = req.body.channel.channel_url
+      // console.log(req.body)
       try {
         const functionCall = JSON.parse(req.body.payload.data).function_calls[0].name
         if(functionCall === "hand_over_to_a_human") {
           console.log("HAND_OVER_TO_A_HUMAN")
+          //talking_to BOT or HUMAN
+          updateChannel(channelUrl, JSON.stringify({"talk_to": "HUMAN"}))
+          
         }
         if(functionCall === "hand_over_to_bot") {
           console.log("HAND_OVER_TO_A_BOT")
+          updateChannel(channelUrl, JSON.stringify({"talk_to": "BOT"}))
           
         }
       } catch (e){
