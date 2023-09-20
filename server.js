@@ -43,14 +43,18 @@ async function updateChannel(channelUrl, data) {
   } catch(e) {
     console.log("FAILED TO UPDATE CHANNEL", e)
   }
-
 }
 
 // Helper function to add a user to a SendBird channel
 
 app.post("/messages", async(req, res) => {
   
-      const channelUrl = req.body.channel.channel_url
+      res.status(200).send("OK")
+      const category = req.body.category
+      if(category === 'group_channel:message_send'){
+           const channelUrl = req.body.channel.channel_url
+      console.log("CHANNEL_URL", channelUrl)
+      console.log(req.body)
       // console.log(req.body)
       try {
         const functionCall = JSON.parse(req.body.payload.data).function_calls[0].name
@@ -69,8 +73,12 @@ app.post("/messages", async(req, res) => {
         console.log("not a bot function message")
         
       }
+        
+        
+      }
+   
       
-      res.status(200).send(200)
+      
   
 })
 
