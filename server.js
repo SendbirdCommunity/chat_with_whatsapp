@@ -49,23 +49,22 @@ async function removeFromChannel(channelUrl, userId) {
 
 app.post("/messages", async(req, res) => {
   
-      console.log(req.body.type)
-      console.log(req.body.payload)
+      console.log(req.body.channel)
+  
+      try {
+        const functionCall = JSON.parse(req.body.payload.data).function_calls[0].name
+        if(functionCall === "hand_over_to_a_human") {
+          console.log("HAND_OVER_TO_A_HUMAN")
+        }
+        if(functionCall === "hand_over_to_bot") {
+          console.log("HAND_OVER_TO_A_BOT")
+          
+        }
+      } catch (e){
+        console.log("not a bot function message")
+        
+      }
       
-      // const senderId = req.body.sender.user_id
-      // const channelUrl = req.body.channel.channel_url
-      // if(senderId.indexOf('bot') >= 0) {
-      //   const messageData = JSON.parse(req.body.payload.data)
-      //   console.log(messageData)
-      //   if(messageData.function_calls){
-      //     //This is weak but will do for now. It needs a much more robust approach. 
-      //     //Get the channel url, and the bot and remove the bot. 
-      //     // console.log(channelUrl)
-      //     console.log(messageData.function_calls)
-      //     // const remove = removeFromChannel(channelUrl, senderId)
-      //     // console.log(remove)
-      //   }
-      // }
       res.status(200).send(200)
   
 })
