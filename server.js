@@ -45,7 +45,16 @@ async function updateChannel(channelUrl, data) {
   }
 }
 
-async updateTicket
+async function updateTicketStatus (channelUrl, status) {
+  
+  try {
+    const ticket = await axios.get(`https://desk-api-{application_id}.sendbird.com/platform/v1/tickets?channel_url=${channelUrl}`)
+    console.log("FOUND T")
+  } catch (e) {
+    
+  }
+  
+}
 
 // Helper function to add a user to a SendBird channel
 
