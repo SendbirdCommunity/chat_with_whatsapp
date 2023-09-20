@@ -45,10 +45,13 @@ async function updateChannel(channelUrl, data) {
   }
 }
 
+async updateTicket
+
 // Helper function to add a user to a SendBird channel
 
 app.post("/messages", async(req, res) => {
   
+      console.log(req.body)
   
       res.status(200).send("OK")
       const category = req.body.category
