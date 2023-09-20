@@ -49,19 +49,23 @@ async function removeFromChannel(channelUrl, userId) {
 
 app.post("/messages", async(req, res) => {
   
-      const senderId = req.body.sender.user_id
-      const channelUrl = req.body.channel.channel_url
-      if(senderId.indexOf('bot') >= 0) {
-        const messageData = JSON.parse(req.body.payload.data)
-        console.log(messageData)
-        if(messageData.function_calls){
-          //This is weak but will do for now. It needs a much more robust approach. 
-          //Get the channel url, and the bot and remove the bot. 
-          // console.log(channelUrl)
-          const remove = removeFromChannel(channelUrl, senderId)
-          console.log(remove)
-        }
-      }
+      console.log(req.body.type)
+      console.log(req.body.payload)
+      
+      // const senderId = req.body.sender.user_id
+      // const channelUrl = req.body.channel.channel_url
+      // if(senderId.indexOf('bot') >= 0) {
+      //   const messageData = JSON.parse(req.body.payload.data)
+      //   console.log(messageData)
+      //   if(messageData.function_calls){
+      //     //This is weak but will do for now. It needs a much more robust approach. 
+      //     //Get the channel url, and the bot and remove the bot. 
+      //     // console.log(channelUrl)
+      //     console.log(messageData.function_calls)
+      //     // const remove = removeFromChannel(channelUrl, senderId)
+      //     // console.log(remove)
+      //   }
+      // }
       res.status(200).send(200)
   
 })
