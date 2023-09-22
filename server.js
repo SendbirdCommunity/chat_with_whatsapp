@@ -139,4 +139,24 @@ app.post("/new_ticket_webhook", async (req, res) => {
   res.status(200).send("OK")
 });
 
+app.post("/bots", async (req, res) => {
+
+  
+  const data = req.body.data
+  const eventType = req.body.eventType
+  if (eventType != 'TICKET.CREATED') return res.status(400).send("Not ticket create webhook")
+  
+  
+  //Invite the bot to the channel to continue the conversation. 
+  const channelUrl = data.channelUrl
+  const botId = "ticket_bot_1"
+  const sendInvite = await inviteBotToChannel(channelUrl, botId)
+  //Send a channel invite using Sendbird's Platform API. 
+  console.log(sendInvite)
+  res.status(200).send("OK")
+});
+
 app.listen(3000, () => console.log("Server started on port 3000"));
+
+
+
