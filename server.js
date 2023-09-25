@@ -102,6 +102,23 @@ app.post("/messages", async(req, res) => {
       }
 })
 
+/**
+ * Invites a bot to a SendBird channel using the provided channel URL and bot ID.
+ * 
+ * This function sends a POST request to the SendBird API, inviting the bot to the specified channel.
+ * 
+ * @async
+ * @function
+ * @param {string} channelUrl - The URL of the channel to which the bot is being invited.
+ * @param {string} botId - The ID of the bot to be invited.
+ * 
+ * @throws Will throw an error if the invitation fails.
+ *
+ * @example
+ * const result = await inviteBotToChannel("some_channel_url", "some_bot_id");
+ *
+ * @returns {Object} Returns an object containing the API response data.
+ */
 async function inviteBotToChannel(channelUrl, botId) {
   const endpoint = `https://api-${APP_ID}.sendbird.com/v3/group_channels/${channelUrl}/invite`;
   const headers = {
@@ -113,31 +130,59 @@ async function inviteBotToChannel(channelUrl, botId) {
   };
 
   try {
+    // Send a POST request to invite the bot
     const response = await axios.post(endpoint, data, { headers: headers });
     return response.data;
   } catch (error) {
-    console.log(error)
+    console.log(error);
+    // Throw an error if the invitation fails
     throw new Error(`Failed to invite bot. Status: ${error.response.status}. Response: ${error.response.data}`);
   }
 }
 
 
+/**
+ * POST handler for '/new_ticket_webhook'.
+ * 
+ * This function gets triggered when a POST request is made to '/new_ticket_webhook'. 
+ * It is intended to respond only to events of type 'TICKET.CREATED'. Upon receiving 
+ * such an event, it invites a bot to the channel.
+ *
+ * @async
+ * @function
+ * @param {Object} req - The Express request object. Expects `req.body.data` to contain 
+ *                       ticket-related data, and `req.body.eventType` to specify the type of event.
+ * @param {Object} res - The Express response object.
+ *
+ * @example
+ * // POST request with JSON payload:
+ * // {
+ * //   "data": {
+ * //     "channelUrl": "some_url"
+ * //   },
+ * //   "eventType": "TICKET.CREATED"
+ * // }
+ *
+ * @returns {void}
+ */
 app.post("/new_ticket_webhook", async (req, res) => {
+  const data = req.body.data; // Extract data from request body
+  const eventType = req.body.eventType; // Extract event type from request body
+  
+  // Check if the event type is 'TICKET.CREATED'
+  if (eventType !== 'TICKET.CREATED') return res.status(400).send("Not ticket create webhook");
 
+  const channelUrl = data.channelUrl; // Extract channel URL from data
+  const botId = "ticket_bot_1"; // Specify bot ID
   
-  const data = req.body.data
-  const eventType = req.body.eventType
-  if (eventType != 'TICKET.CREATED') return res.status(400).send("Not ticket create webhook")
+  // Invite bot to the channel
+  const sendInvite = await inviteBotToChannel(channelUrl, botId);
   
-  
-  //Invite the bot to the channel to continue the conversation. 
-  const channelUrl = data.channelUrl
-  const botId = "ticket_bot_1"
-  const sendInvite = await inviteBotToChannel(channelUrl, botId)
-  //Send a channel invite using Sendbird's Platform API. 
-  console.log(sendInvite)
-  res.status(200).send("OK")
+  // Send 200 OK response
+  res.status(200).send("OK");
 });
+
+
 
 app.post("/bots", async (req, res) => {
 
