@@ -134,7 +134,6 @@ async function inviteBotToChannel(channelUrl, botId) {
     const response = await axios.post(endpoint, data, { headers: headers });
     return response.data;
   } catch (error) {
-    console.log(error);
     // Throw an error if the invitation fails
     throw new Error(`Failed to invite bot. Status: ${error.response.status}. Response: ${error.response.data}`);
   }
