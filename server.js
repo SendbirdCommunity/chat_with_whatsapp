@@ -174,7 +174,7 @@ app.post("/new_ticket_webhook", async (req, res) => {
   
   // Invite bot to the channel
   const sendInvite = await inviteBotToChannel(channelUrl, botId);
-  
+  console.log("INVITED BOT TO CHANNEL")
   // Send 200 OK response
   res.status(200).send("OK");
 });
