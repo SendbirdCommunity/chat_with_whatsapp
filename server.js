@@ -171,7 +171,6 @@ app.post("/new_ticket_webhook", async (req, res) => {
   
   // Check if the event type is 'TICKET.CREATED'
   if (eventType !== 'TICKET.CREATED') return res.status(400).send("Not ticket create webhook");
-
   const channelUrl = data.channelUrl; // Extract channel URL from data
   const botId = "ticket_bot_1"; // Specify bot ID
   
