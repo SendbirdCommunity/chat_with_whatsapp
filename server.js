@@ -5,6 +5,7 @@ const app = express();
 app.use(express.json());
 const APP_ID = process.env.APP_ID;
 const API_TOKEN = process.env.API_TOKEN;
+const SENDBIRDDESKAPITOKEN = process.env.SENDBIRDDESKAPITOKEN
 
 // SendBird API Base URL
 const SEND_BIRD_API_BASE_URL = `https://api-${APP_ID}.sendbird.com/v3`;
@@ -51,7 +52,7 @@ async function updateTicketStatus (channelUrl, status) {
     const ticket = await axios.get(`https://desk-api-${APP_ID}.sendbird.com/platform/v1/tickets?channel_url=${channelUrl}`, {
        headers: { 
          "Content-Type": "application/json; charset=utf8",
-         "SENDBIRDDESKAPITOKEN": "b81ab50c9a840a33d5bc8976ac9892d0998c9696" 
+         "SENDBIRDDESKAPITOKEN": SENDBIRDDESKAPITOKEN
        }
     })
     const ticketId = ticket.data.results[0].id
@@ -59,7 +60,7 @@ async function updateTicketStatus (channelUrl, status) {
       "priority": status}, {
        headers: { 
          "Content-Type": "application/json; charset=utf8",
-         "SENDBIRDDESKAPITOKEN": "b81ab50c9a840a33d5bc8976ac9892d0998c9696" 
+         "SENDBIRDDESKAPITOKEN": SENDBIRDDESKAPITOKEN
        }
     })
   } catch (e) {
@@ -71,32 +72,19 @@ async function updateTicketStatus (channelUrl, status) {
 
 app.post("/messages", async(req, res) => {
   
-      // console.log(req.body)
-  
       res.status(200).send("OK")
       const category = req.body.category
       if(category === 'group_channel:message_send'){
            const channelUrl = req.body.channel.channel_url
-      console.log("CHANNEL_URL", channelUrl)
-      // console.log(req.body)
-      // console.log(req.body)
       try {
         const functionCall = JSON.parse(req.body.payload.data).function_calls[0].name
         if(functionCall === "hand_over_to_a_human") {
           console.log("HAND_OVER_TO_A_HUMAN")
-          //talking_to BOT or HUMAN
-          updateChannel(channelUrl, JSON.stringify({"talk_to": "HUMAN"}))
           updateTicketStatus(channelUrl, "HIGH")
           
         }
-        if(functionCall === "hand_over_to_bot") {
-          console.log("HAND_OVER_TO_A_BOT")
-          updateChannel(channelUrl, JSON.stringify({"talk_to": "BOT"}))
-          updateTicketStatus(channelUrl, "LOW")
-        }
       } catch (e){
         console.log("not a bot function message")
-        
       }
       }
 })
