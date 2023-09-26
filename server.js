@@ -65,7 +65,6 @@ async function updateTicketStatus (channelUrl, status) {
   } catch (e) {
     console.log(e)
   }
-  
 }
 
 // Helper function to add a user to a SendBird channel
