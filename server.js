@@ -57,10 +57,17 @@ async function updateTicketStatus (channelUrl, status) {
     })
     const ticketId = ticket.data.results[0].id
     const ticketUpdate = await axios.patch(`https://desk-api-${APP_ID}.sendbird.com/platform/v1/tickets/${ticketId}`,{
-      "priority": "HIGH",
+      "priority": "HIGH"}, {
+       headers: { 
+         "Content-Type": "application/json; charset=utf8",
+         "SENDBIRDDESKAPITOKEN": SENDBIRDDESKAPITOKEN
+       }
+    })
+    const assignGroup = await axios.post(`https://desk-api-${APP_ID}.sendbird.com/platform/v1/tickets/transfer_to_group`,{
+      "tickets": [ticketId],
       "status": "PENDING",
       "groupKey":"example1"
-       
+    
     }, {
        headers: { 
          "Content-Type": "application/json; charset=utf8",
