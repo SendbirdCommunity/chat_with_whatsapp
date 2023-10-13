@@ -57,7 +57,11 @@ async function updateTicketStatus (channelUrl, status) {
     })
     const ticketId = ticket.data.results[0].id
     const ticketUpdate = await axios.patch(`https://desk-api-${APP_ID}.sendbird.com/platform/v1/tickets/${ticketId}`,{
-      "priority": status}, {
+      "priority": "HIGH",
+      "status": "PENDING",
+      "groupKey":"example1"
+       
+    }, {
        headers: { 
          "Content-Type": "application/json; charset=utf8",
          "SENDBIRDDESKAPITOKEN": SENDBIRDDESKAPITOKEN
