@@ -81,22 +81,16 @@ async function updateTicketStatus (channelUrl, status) {
 
 // Helper function to add a user to a SendBird channel
 
-app.post("/messages", async(req, res) => {
+app.post("/hand_off", async(req, res) => {
   
-      res.status(200).send("OK")
-      const category = req.body.category
-      if(category === 'group_channel:message_send'){
-           const channelUrl = req.body.channel.channel_url
+      console.log(req.body)
+      res.status(200).send({"message":"handing over to a human. Just a minute please."})
+    
+      const channelUrl = req.body.channel_url
       try {
-        const functionCall = JSON.parse(req.body.payload.data).function_calls[0].name
-        if(functionCall === "hand_over_to_a_human") {
-          console.log("HAND_OVER_TO_A_HUMAN")
           updateTicketStatus(channelUrl, "HIGH")
-          
-        }
       } catch (e){
-        console.log("not a bot function message")
-      }
+        res.status(400).send({"error":true, "message":"Failed to perform hand over"})
       }
 })
 
