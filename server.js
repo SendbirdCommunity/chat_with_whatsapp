@@ -80,7 +80,6 @@ async function updateTicketStatus (channelUrl, status) {
 }
 
 // Helper function to add a user to a SendBird channel
-
 app.post("/hand_off", async(req, res) => {
   
       console.log(req.body)
