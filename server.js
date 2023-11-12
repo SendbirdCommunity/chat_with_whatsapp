@@ -83,11 +83,10 @@ async function updateTicketStatus (channelUrl, status) {
 app.post("/hand_off", async(req, res) => {
   
       console.log(req.body)
-      res.status(200).send({"message":"handing over to a human. Just a minute please."})
-    
       const channelUrl = req.body.channel_url
       try {
-          updateTicketStatus(channelUrl, "HIGH")
+          // updateTicketStatus(channelUrl, "HIGH")
+          res.status(200).send({"message":"handing over to a human. Just a minute please."})
       } catch (e){
         res.status(400).send({"error":true, "message":"Failed to perform hand over"})
       }
