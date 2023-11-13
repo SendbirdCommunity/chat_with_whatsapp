@@ -67,30 +67,36 @@ async function updateTicketStatus (channelUrl) {
       "tickets": [ticketId],
       "status": "PENDING",
       "groupKey":"example1"
-    
     }, {
        headers: { 
          "Content-Type": "application/json; charset=utf8",
          "SENDBIRDDESKAPITOKEN": SENDBIRDDESKAPITOKEN
        }
     })
+    return { success: true, message: 'Ticket updated successfully' };
   } catch (e) {
     console.log(e)
+    return { success: false, message: 'Failed to update ticket' };
   }
 }
 
 // Helper function to add a user to a SendBird channel
 app.post("/hand_off", async(req, res) => {
-  
-      console.log(req.body)
-      const channelUrl = req.body.channel_url
-      try {
-          await updateTicketStatus(channelUrl)
-          res.status(200).send({"message":"handing over to a human. Just a minute please."})
-      } catch (e){
-        res.status(400).send({"error":true, "message":"Failed to perform hand over"})
-      }
-})
+    console.log(req.body);
+    const channelUrl = req.body.channel_url;
+
+    try {
+        const updateResponse = await updateTicketStatus(channelUrl);
+        
+        if (updateResponse.success) {
+            res.status(200).send({ "message": "Handing over to a human. Just a minute please." });
+        } else {
+            throw new Error(updateResponse.message);
+        }
+    } catch (e) {
+        res.status(400).send({ "error": true, "message": e.message || "Failed to perform hand over" });
+    }
+});
 
 /**
  * Invites a bot to a SendBird channel using the provided channel URL and bot ID.
