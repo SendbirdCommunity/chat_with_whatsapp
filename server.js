@@ -46,7 +46,7 @@ async function updateChannel(channelUrl, data) {
   }
 }
 
-async function updateTicketStatus (channelUrl, status) {
+async function updateTicketStatus (channelUrl) {
   
   try {
     const ticket = await axios.get(`https://desk-api-${APP_ID}.sendbird.com/platform/v1/tickets?channel_url=${channelUrl}`, {
@@ -85,7 +85,7 @@ app.post("/hand_off", async(req, res) => {
       console.log(req.body)
       const channelUrl = req.body.channel_url
       try {
-          // updateTicketStatus(channelUrl, "HIGH")
+          await updateTicketStatus(channelUrl)
           res.status(200).send({"message":"handing over to a human. Just a minute please."})
       } catch (e){
         res.status(400).send({"error":true, "message":"Failed to perform hand over"})
