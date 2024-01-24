@@ -5,7 +5,24 @@ const app = express();
 app.use(express.json());
 
 
+function insertRandomBanana(text) {
+            const bananaEmoji = '🍌';
+            const textArray = text.split(' ');
 
+            for (let i = 0; i < textArray.length; i++) {
+                if (Math.random() < 0.2) { // Adjust the probability as needed
+                    textArray[i] += ' ' + bananaEmoji;
+                }
+            }
+            text = textArray.join(' ');
+            return text
+        }
+
+app.post("/drama", async (req, res) => {
+  
+  const dramaText = insertRandomBanana(req.body.text)
+  res.status(200).send(dramaText)
+})
 
 app.get("/joke", async (req, res) => {
   console.log(req)
