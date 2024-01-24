@@ -6,6 +6,7 @@ app.use(express.json());
 
 
 function insertRandomBanana(text) {
+  
             const bananaEmoji = '🍌';
             const textArray = text.split(' ');
 
@@ -20,7 +21,7 @@ function insertRandomBanana(text) {
 
 app.post("/drama", async (req, res) => {
   
-  const dramaText = insertRandomBanana(req.body.text)
+  const dramaText = insertRandomBanana(req.body.params.text)
   res.status(200).send(dramaText)
 })
 
