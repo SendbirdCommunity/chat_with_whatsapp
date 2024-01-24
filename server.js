@@ -20,8 +20,8 @@ function insertRandomBanana(text) {
         }
 
 app.post("/drama", async (req, res) => {
-  
-  const dramaText = insertRandomBanana(req.body.params.text)
+  console.log(req)
+  const dramaText = insertRandomBanana(req.query.text)
   res.status(200).send(dramaText)
 })
 
