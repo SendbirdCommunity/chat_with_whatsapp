@@ -4,40 +4,48 @@ const axios = require("axios");
 const app = express();
 app.use(express.json());
 
-
-function insertRandomBanana(text) {
+function createLead(content) {
   
-            const bananaEmoji = '🍌';
-            const textArray = text.split(' ');
+  const { first_name, last_name, email, description   } = content
+  
+  
+  let data = JSON.stringify({
+    data: {
+      first_name,
+      last_name,
+      email,
+      description: "The user looks like a typical lead for these reasons.",
+    },
+  });
 
-            for (let i = 0; i < textArray.length; i++) {
-                if (Math.random() < 0.2) { // Adjust the probability as needed
-                    textArray[i] += ' ' + bananaEmoji;
-                }
-            }
-            text = textArray.join(' ');
-            return text
-        }
+  let config = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "https://api.getbase.com/v2/leads",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization:
+        "Bearer 810eb98743bd317d704e91135b6179ef00d6b0d17849d7f0b95e160388ca4657",
+    },
+    data: data,
+  };
 
-app.post("/drama", async (req, res) => {
-  let dramaText = ""
-  try {
-      dramaText = insertRandomBanana(req.query.text)  || insertRandomBanana(req.body.text) 
-  } catch (e) {
-    console.log(e)
-  }
-  res.status(200).send(dramaText)
-})
+  axios
+    .request(config)
+    .then((response) => {
+      console.log(JSON.stringify(response.data));
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+}
 
-app.get("/joke", async (req, res) => {
-  console.log(req)
-  const joke = `Why did the banana go to the doctor?
-  Because it wasn't peeling well! 🍌😊`
-  res.status(200).send(JSON.stringify(joke));
+app.post("/lead", async (req, res) => {
+  const token = req.headers.authorization || null;
+  console.log(token);
+  console.log(req.body);
+  //https://api.getbase.com/v2/leads
+  res.status(200).send("okay");
 });
 
-
 app.listen(3000, () => console.log("Server started on port 3000"));
-
-
-
