@@ -20,14 +20,12 @@ function insertRandomBanana(text) {
         }
 
 app.post("/drama", async (req, res) => {
-  console.log(req)
   let dramaText = ""
   try {
       dramaText = insertRandomBanana(req.query.text)  || insertRandomBanana(req.body.text) 
-  } catch {
-    console.log("from GPT")
+  } catch (e) {
+    console.log(e)
   }
-  
   res.status(200).send(dramaText)
 })
 
