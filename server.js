@@ -16,7 +16,6 @@ async function createLead(content) {
       description: description || "SOME TEXT" 
     }
   }
- console.log(data)
   let config = { headers: { "Content-Type": "application/json", Authorization: token}};
 
   try {
@@ -24,18 +23,15 @@ async function createLead(content) {
     const result = JSON.stringify(response.data);
     return result 
   } catch (error) {
-    // console.error(error.request);
     return JSON.stringify(error)
   }
 }
 
-
 app.post("/lead", async (req, res) => {
   const token = req.headers.authorization || null;
   const lead = await createLead({...req.body, token})
-  //https://api.getbase.com/v2/leads
   console.log(lead)
-  res.status(200).send(JSON.stringify(lead));
+  res.status(200).send(lead);
 });
 
 app.listen(3000, () => console.log("Server started on port 3000"));
