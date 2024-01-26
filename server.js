@@ -31,7 +31,9 @@ async function createLead(content) {
 
 
 app.post("/lead", async (req, res) => {
+
   const token = req.headers.authorization || null;
+
   const lead = await createLead({...req.body, token})
   console.log(lead)
   res.status(200).send(lead);
