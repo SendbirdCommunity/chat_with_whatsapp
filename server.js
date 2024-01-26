@@ -14,7 +14,7 @@ async function createLead(content) {
     data: { 
       first_name: first_name || "NOT GIVEN" , 
       last_name: last_name || "NOT GIVEN", 
-      email: email || "NOT GIVEN", 
+      email: email || "a@b.com", 
       description: description || "SOME TEXT" 
     }
   }
