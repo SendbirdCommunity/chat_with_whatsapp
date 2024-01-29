@@ -14,44 +14,51 @@ const rawBodyBuffer = (req, res, buf, encoding) => {
   }
 };
 
-const verifySlackRequest = (req) => {
-  const slackSignature = req.headers["x-slack-signature"];
-  const requestTimestamp = Number(req.headers['x-slack-request-timestamp']);
+const verifySlackRequest = (req, res, next) => {
+  
+  try {
+    const slackSignature = req.headers["x-slack-signature"];
+    const requestTimestamp = Number(req.headers['x-slack-request-timestamp']);
+    console.log(slackSignature)
+    console.log(requestTimestamp)
 
   // Protect against replay attacks by verifying the request timestamp is within five minutes of the current time
   const timeDiff = Math.abs(Date.now() / 1000 - requestTimestamp);
+   
   if (timeDiff > 60 * 5) {
-    return false;
+    return res.status(400).send("Request timestamp is too old.");
   }
-  console.log(req.rawBody)
-  const sigBasestring = `v0:${requestTimestamp}:${req.rawBody}`;
-  const mySignature =
-    "v0=" +
-    crypto
-      .createHmac("sha256", process.env.SLACK_SIGNING_SECRET)
-      .update(sigBasestring, "utf8")
-      .digest("hex");
+
+  // console.log(req.rawBody); // Make sure req.rawBody is populated as expected
+
+  const sigBasestring = `v0:${requestTimestamp}:${req.body}`;
+  const mySignature = "v0=" + crypto.createHmac("sha256", process.env.SLACK_SIGNING_SECRET)
+                                   .update(sigBasestring, "utf8")
+                                   .digest("hex");
 
   const slackSignatureBuf = Buffer.from(slackSignature, "utf8");
   const mySignatureBuf = Buffer.from(mySignature, "utf8");
 
   // Ensure both buffers are the same length
   if (slackSignatureBuf.length !== mySignatureBuf.length) {
-    return false;
+    return res.status(400).send("Signature length mismatch.");
   }
 
-  return crypto.timingSafeEqual(mySignatureBuf, slackSignatureBuf);
+  if (crypto.timingSafeEqual(mySignatureBuf, slackSignatureBuf)) {
+    console.log("working")
+    next(); // Verification succeeded, proceed to the next middleware/route handler
+  } else {
+    res.status(403).send("Verification failed."); // Verification failed, end the response
+  }
+  } catch (e) {
+    console.log(e)
+  }
 
-  // return crypto.timingSafeEqual(Buffer.from(mySignature, 'utf8'), Buffer.from(slackSignature, 'utf8'));
 };
 
+
 // Define POST endpoint for creating a lead
-app.post("/message_to_bot", async (req, res) => {
-  console.log("working")
-  if (!verifySlackRequest(req)) {
-    console.log("auth failed")
-    return res.status(400).send("Verification failed");
-  }
+app.post("/message_to_bot", verifySlackRequest, async (req, res) => {
 
   // Proceed with processing the request
   // Your logic here
