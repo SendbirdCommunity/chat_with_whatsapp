@@ -1,7 +1,6 @@
 const express = require("express");
 const axios = require("axios");
-const bodyParser = require("body-parser");
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 // Initialize Express application
 const app = express();
@@ -15,41 +14,49 @@ const rawBodyBuffer = (req, res, buf, encoding) => {
   }
 };
 
-
 const verifySlackRequest = (req) => {
-  const slackSignature = req.headers['x-slack-signature'];
-  const requestTimestamp = req.headers['x-slack-request-timestamp'];
+  const slackSignature = req.headers["x-slack-signature"];
+  const requestTimestamp = Number(req.headers['x-slack-request-timestamp']);
 
   // Protect against replay attacks by verifying the request timestamp is within five minutes of the current time
   const timeDiff = Math.abs(Date.now() / 1000 - requestTimestamp);
   if (timeDiff > 60 * 5) {
     return false;
   }
-
+  console.log(req.rawBody)
   const sigBasestring = `v0:${requestTimestamp}:${req.rawBody}`;
-  const mySignature = 'v0=' + 
-    crypto.createHmac('sha256', process.env.SLACK_SIGNING_SECRET)
-      .update(sigBasestring, 'utf8')
-      .digest('hex');
+  const mySignature =
+    "v0=" +
+    crypto
+      .createHmac("sha256", process.env.SLACK_SIGNING_SECRET)
+      .update(sigBasestring, "utf8")
+      .digest("hex");
 
-  return crypto.timingSafeEqual(Buffer.from(mySignature, 'utf8'), Buffer.from(slackSignature, 'utf8'));
+  const slackSignatureBuf = Buffer.from(slackSignature, "utf8");
+  const mySignatureBuf = Buffer.from(mySignature, "utf8");
+
+  // Ensure both buffers are the same length
+  if (slackSignatureBuf.length !== mySignatureBuf.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(mySignatureBuf, slackSignatureBuf);
+
+  // return crypto.timingSafeEqual(Buffer.from(mySignature, 'utf8'), Buffer.from(slackSignature, 'utf8'));
 };
-
-
-// Use the middleware
-app.use(bodyParser.urlencoded({ verify: rawBodyBuffer, extended: true }));
 
 // Define POST endpoint for creating a lead
 app.post("/message_to_bot", async (req, res) => {
-  
+  console.log("working")
   if (!verifySlackRequest(req)) {
-    return res.status(400).send('Verification failed');
+    console.log("auth failed")
+    return res.status(400).send("Verification failed");
   }
 
   // Proceed with processing the request
   // Your logic here
 
-  res.status(200).send('Request verified');
+  res.status(200).send("Request verified");
 });
 
 // Start the server on port 3000
