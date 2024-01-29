@@ -4,6 +4,8 @@ const axios = require("axios");
 // Initialize Express application
 const app = express();
 
+const slackSigningSecret = process.env["slack-signing-secret"]
+console.log(slackSigningSecret)
 // Middleware to parse JSON bodies
 // app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
