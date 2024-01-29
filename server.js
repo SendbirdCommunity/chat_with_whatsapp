@@ -55,7 +55,7 @@ app.post("/message_to_bot",slack,  async (req, res) => {
   console.log(text)
   console.log(user_name)
 
-  res.status(200).send(JSON.stringify(req.body));
+  res.status(200).send(text);
 });
 
 // Start the server on port 3000
