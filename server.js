@@ -9,37 +9,49 @@ const app = express();
 app.use(express.json({verify: (req, _, buf) => {req.rawBody = buf;}}));
 app.use(express.urlencoded({extended: true,verify: (req, _, buf) => {req.rawBody = buf}}));
 
+function secureCompare(a, b) {
+    try {
+        return crypto.timingSafeEqual(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8'));
+    } catch (error) {
+        return false;
+    }
+}
 
-const verifySlackRequest = (req, res, next) => {
+
+const slack = (req, res, next) => {
   
+    
   
-//     const slackSignature = req.headers["x-slack-signature"];
-//     const requestTimestamp = Number(req.headers['x-slack-request-timestamp']);
-//     console.log(slackSignature)
-//     console.log(requestTimestamp)
+    const timestampHeader = req.headers['x-slack-request-timestamp'];
+    if (!timestampHeader) {
+        return res.status(400).send('Error: Missing Slack timestamp header.');
+    }
 
-//   // console.log(req.rawBody); // Make sure req.rawBody is populated as expected
+    const currentTime = Math.floor(new Date().getTime() / 1000);
+    if (Math.abs(currentTime - Number(timestampHeader)) > 300) {
+        return res.status(400).send('Error: Request too old.');
+    }
 
-//   const sigBasestring = `v0:${requestTimestamp}:${req.body}`;
-//   console.log(sigBasestring)
-//   const mySignature = "v0=" + crypto.createHmac("sha256", process.env.SLACK_SIGNING_SECRET)
-//                                    .update(sigBasestring, "utf8")
-//                                    .digest("hex");
+    const baseString = `v0:${timestampHeader}:${req.rawBody}`;
+    const receivedSignature = req.headers['x-slack-signature'];
+    const hmac = crypto.createHmac('sha256', process.env.SLACK_SIGNING_SECRET);
+    const expectedSignature = `v0=${hmac.update(baseString, 'utf8').digest('hex')}`;
+
+    if (!secureCompare(expectedSignature, receivedSignature)) {
+        console.log('WEBHOOK SIGNATURE MISMATCH');
+        return res.status(400).send('Error: Signature mismatch security error');
+    }
+
+    console.log('WEBHOOK VERIFIED');
+    next();
   
-//   console.log(mySignature)
-
-
-
-};
-
+}
 
 // Define POST endpoint for creating a lead
-app.post("/message_to_bot",  async (req, res) => {
+app.post("/message_to_bot",slack,  async (req, res) => {
 
   // Proceed with processing the request
   // Your logic here
-  
-  console.log({rawBody: req.rawBody});
 
   res.status(200).send("Request verified");
 });
