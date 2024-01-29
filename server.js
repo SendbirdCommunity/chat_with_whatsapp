@@ -5,7 +5,7 @@ const crypto = require("crypto");
 // Initialize Express application
 const app = express();
 
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.urlencoded({ extended: true }));
 
 // Middleware to access the raw body
 const rawBodyBuffer = (req, res, buf, encoding) => {
@@ -13,6 +13,10 @@ const rawBodyBuffer = (req, res, buf, encoding) => {
     req.rawBody = buf.toString(encoding || "utf8");
   }
 };
+
+app.use(bodyParser.json({ verify: rawBodyBuffer }));
+app.use(bodyParser.urlencoded({ verify: rawBodyBuffer, extended: true }));
+app.use(bodyParser.raw({ verify: rawBodyBuffer, type: '*/*' }));
 
 const verifySlackRequest = (req, res, next) => {
   
