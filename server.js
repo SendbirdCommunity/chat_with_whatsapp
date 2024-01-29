@@ -1,6 +1,5 @@
 const express = require("express");
 const axios = require("axios");
-const bodyParser = require('body-parser');
 const crypto = require("crypto");
 
 // Initialize Express application
@@ -20,8 +19,8 @@ function secureCompare(a, b) {
 
 const slack = (req, res, next) => {
   
-    
-  
+    //Adapted from - https://dev.to/soumyadey/verifying-requests-from-slack-the-correct-method-for-nodejs-417i
+    //Based on https://api.slack.com/authentication/verifying-requests-from-slack
     const timestampHeader = req.headers['x-slack-request-timestamp'];
     if (!timestampHeader) {
         return res.status(400).send('Error: Missing Slack timestamp header.');
@@ -52,8 +51,11 @@ app.post("/message_to_bot",slack,  async (req, res) => {
 
   // Proceed with processing the request
   // Your logic here
+  const { text, user_name } =  req.body
+  console.log(text)
+  console.log(user_name)
 
-  res.status(200).send("Request verified");
+  res.status(200).send(JSON.stringify(req.body));
 });
 
 // Start the server on port 3000
