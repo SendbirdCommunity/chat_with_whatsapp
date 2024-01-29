@@ -5,12 +5,12 @@ const axios = require("axios");
 const app = express();
 
 // Middleware to parse JSON bodies
-app.use(express.json());
-
+// app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Define POST endpoint for creating a lead
 app.post("/message_to_bot", async (req, res) => {
-  console.log(req)
+  console.log(req.body)
   res.status(200).send("okay"); // Send the result back to the client
 });
 
