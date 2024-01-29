@@ -46,16 +46,48 @@ const slack = (req, res, next) => {
   
 }
 
+function performFurtherActions(payload) {
+    // Simulate some asynchronous work, like fetching data or processing information
+    setTimeout(async () => {
+        try {
+            const responseUrl = payload.response_url;
+
+            // Prepare the additional details you want to send
+            const message = {
+                response_type: 'in_channel', // or 'ephemeral' for a private message
+                text: 'Here are the additional details you requested...'
+                // You can also include more complex attachments or blocks here
+            };
+
+            // POST the message to the response_url
+            await axios.post(responseUrl, message);
+
+            console.log('Additional details sent successfully');
+        } catch (error) {
+            console.error('Failed to send additional details:', error);
+        }
+    }, 5000); // Delay of 5 seconds for demonstration purposes
+}
+
 // Define POST endpoint for creating a lead
 app.post("/message_to_bot",slack,  async (req, res) => {
 
   // Proceed with processing the request
   // Your logic here
+  const payload = req.body;
+
   const { text, user_name } =  req.body
   console.log(text)
   console.log(user_name)
 
-  res.status(200).send(text);
+  res.json({
+        response_type: 'in_channel', // or 'ephemeral' for a private message
+        text: '\n\nThinking...'
+    });
+  
+  
+  // res.status(200).send(text);
+  performFurtherActions(payload);
 });
 
 // Start the server on port 3000
