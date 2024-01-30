@@ -16,7 +16,6 @@ function secureCompare(a, b) {
     }
 }
 
-
 const slack = (req, res, next) => {
   
     //Adapted from - https://dev.to/soumyadey/verifying-requests-from-slack-the-correct-method-for-nodejs-417i
@@ -66,9 +65,9 @@ async function performFurtherActions(payload) {
     let config = {
         method: 'post',
         maxBodyLength: Infinity,
-        url: 'https://api-B0A89C0D-9C76-4AC4-A694-595E76C2A1D0.sendbird.com/v3/bots/banana_savvy/ai_chatbot_replies',
+        url: `https://api-${process.env.SENDBIRD_APP_ID}.sendbird.com/v3/bots/banana_savvy/ai_chatbot_replies`,
         headers: {
-            'Api-Token': 'ab319a91ffba6781145c6732c541e92acfb8179f',
+            'Api-Token': process.env.SENDBIRD_API_TOKEN,
             'Content-Type': 'application/json'
         },
         data: data
