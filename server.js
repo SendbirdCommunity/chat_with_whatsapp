@@ -46,7 +46,9 @@ const authenticateIncomingSlackCalls = (req, res, next) => {
 const performFurtherActions = async (payload) => {
     try {
         const response = await axios.post(`https://api-${process.env.SENDBIRD_APP_ID}.sendbird.com/v3/bots/banana_savvy/ai_chatbot_replies`, {
-            messages: [{ role: 'user', content: payload.text }]
+            messages: [
+              { role: 'user', content: payload.text }
+            ]
         }, {
             headers: { 'Api-Token': process.env.SENDBIRD_API_TOKEN, 'Content-Type': 'application/json' },
             maxBodyLength: Infinity
