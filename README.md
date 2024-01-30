@@ -1,1 +1,1 @@
-# Proxy server between Sendbird bot API and Zendesk Sell
+# Proxy server between Slack and Sendbird's Chatbots

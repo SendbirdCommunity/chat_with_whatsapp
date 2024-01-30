@@ -43,7 +43,7 @@ const authenticateIncomingSlackCalls = (req, res, next) => {
  * Performs further actions after Slack call authentication, such as making an API request.
  * @param {Object} payload - The payload received from Slack.
  */
-const performFurtherActions = async (payload) => {
+const passMessageToSendbirdBot = async (payload) => {
     try {
         const response = await axios.post(`https://api-${process.env.SENDBIRD_APP_ID}.sendbird.com/v3/bots/banana_savvy/ai_chatbot_replies`, {
             messages: [
@@ -67,7 +67,7 @@ const performFurtherActions = async (payload) => {
 app.post('/message_to_bot', authenticateIncomingSlackCalls, async (req, res) => {
     const { text } = req.body;
     res.json({ response_type: 'in_channel', text: `🤖\nQ: ${text}` });
-    performFurtherActions(req.body);
+    passMessageToSendbirdBot(req.body);
 });
 
 /**
