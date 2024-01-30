@@ -52,33 +52,14 @@ const slack = (req, res, next) => {
 
 
 
-function performFurtherActions(payload) {
+async function performFurtherActions(payload) {
     // Simulate some asynchronous work, like fetching data or processing information
-    setTimeout(async () => {
-        try {
-            const responseUrl = payload.response_url;
 
-            // Prepare the additional details you want to send
-            const message = {
-                response_type: 'in_channel', // or 'ephemeral' for a private message
-                text: '🤖A: Here are the additional details you requested...'
-                // You can also include more complex attachments or blocks here
-            };
-
-            // POST the message to the response_url
-            await axios.post(responseUrl, message);
-
-            console.log('Additional details sent successfully');
-        } catch (error) {
-            console.error('Failed to send additional details:', error);
-        }
-    }, 5000); // Delay of 5 seconds for demonstration purposes
   
      let data = JSON.stringify({
         "messages": [
-            {"role": "user", "content": "Hi"},
-            {"role": "assistant", "content": "Hi, how can I help you?"},
-            {"role": "user", "content": "Tell me about Sendbird."}
+            {"role": "user", "content": payload.text}
+            // {"role": "assistant", "content": "Hi, how can I help you?"}
         ]
     });
 
@@ -96,6 +77,26 @@ function performFurtherActions(payload) {
     try {
         const response = await axios.request(config);
         console.log(JSON.stringify(response.data));
+        try {
+            const responseUrl = payload.response_url;
+
+            // Prepare the additional details you want to send
+            const message = {
+                response_type: 'in_channel', // or 'ephemeral' for a private message
+                text: `🤖A: ${response.data.reply_messages[0]}`
+                // You can also include more complex attachments or blocks here
+            };
+
+            // POST the message to the response_url
+            await axios.post(responseUrl, message);
+
+            console.log('Additional details sent successfully');
+        } catch (error) {
+            console.error('Failed to send additional details:', error);
+        }
+
+      
+      
     } catch (error) {
         console.error(error);
     }
@@ -109,10 +110,7 @@ app.post("/message_to_bot",slack,  async (req, res) => {
   // Proceed with processing the request
   // Your logic here
   const payload = req.body;
-
   const { text, user_name } =  req.body
-  console.log(text)
-  console.log(user_name)
 
   res.json({
         response_type: 'in_channel', // or 'ephemeral' for a private message
