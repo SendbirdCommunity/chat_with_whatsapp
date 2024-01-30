@@ -46,6 +46,12 @@ const slack = (req, res, next) => {
   
 }
 
+
+
+
+
+
+
 function performFurtherActions(payload) {
     // Simulate some asynchronous work, like fetching data or processing information
     setTimeout(async () => {
@@ -55,7 +61,7 @@ function performFurtherActions(payload) {
             // Prepare the additional details you want to send
             const message = {
                 response_type: 'in_channel', // or 'ephemeral' for a private message
-                text: 'Here are the additional details you requested...'
+                text: '🤖A: Here are the additional details you requested...'
                 // You can also include more complex attachments or blocks here
             };
 
@@ -67,6 +73,34 @@ function performFurtherActions(payload) {
             console.error('Failed to send additional details:', error);
         }
     }, 5000); // Delay of 5 seconds for demonstration purposes
+  
+     let data = JSON.stringify({
+        "messages": [
+            {"role": "user", "content": "Hi"},
+            {"role": "assistant", "content": "Hi, how can I help you?"},
+            {"role": "user", "content": "Tell me about Sendbird."}
+        ]
+    });
+
+    let config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: 'https://api-B0A89C0D-9C76-4AC4-A694-595E76C2A1D0.sendbird.com/v3/bots/banana_savvy/ai_chatbot_replies',
+        headers: {
+            'Api-Token': 'ab319a91ffba6781145c6732c541e92acfb8179f',
+            'Content-Type': 'application/json'
+        },
+        data: data
+    };
+
+    try {
+        const response = await axios.request(config);
+        console.log(JSON.stringify(response.data));
+    } catch (error) {
+        console.error(error);
+    }
+  
+  
 }
 
 // Define POST endpoint for creating a lead
@@ -82,7 +116,7 @@ app.post("/message_to_bot",slack,  async (req, res) => {
 
   res.json({
         response_type: 'in_channel', // or 'ephemeral' for a private message
-        text: '\n\nThinking...'
+        text: `\n\n🤖 \nQ: ${text}`
     });
   
   
