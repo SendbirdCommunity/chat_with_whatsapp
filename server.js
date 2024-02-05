@@ -55,8 +55,31 @@ const passMessageToSendbirdBot = async (payload) => {
             maxBodyLength: Infinity
         });
 
-        const message = { response_type: 'in_channel', text: `${response.data.reply_messages[0]}` };
-        await axios.post(payload.response_url, message);
+//       {
+//   token: 'FkCzxzrvz4bvrVbxLYy7bTW0',
+//   team_id: 'T0ADCTNEL',
+//   team_domain: 'sendbird',
+//   channel_id: 'DF4F43S6P',
+//   channel_name: 'directmessage',
+//   user_id: 'UF60L0086',
+//   user_name: 'jason.allshorn',
+//   command: '/ask',
+//   text: 'there?',
+//   api_app_id: 'A06G2D6NPQC',
+//   is_enterprise_install: 'false',
+//   response_url: 'https://hooks.slack.com/commands/T0ADCTNEL/6576201349062/2WP00PqRoPF3LSVaN8Tc9b2y',
+//   trigger_id: '6595492611985.10454940496.5a87a1b5b608cc1cf1ed793eb93b956f'
+// }
+      
+        // const message = { response_type: 'in_channel', text: `${response.data.reply_messages[0]}` };
+        // await axios.post(payload.response_url, message);
+      console.log(payload)
+      const body = {
+        channel: payload.channel_id,
+        ts: 
+        
+      }
+      await axios.post("https://slack.com/api/chat.update", body)
     } catch (error) {
         console.error('Error in performFurtherActions:', error);
     }
