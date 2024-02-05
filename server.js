@@ -44,7 +44,7 @@ const authenticateIncomingSlackCalls = (req, res, next) => {
  * @param {Object} payload - The payload received from Slack.
  */
 const passMessageToSendbirdBot = async (payload) => {
-  console.log("working 1")
+
   
     try {
         // const response = await axios.post(`https://api-${process.env.SENDBIRD_APP_ID}.sendbird.com/v3/bots/banana_savvy/ai_chatbot_replies`, {
@@ -80,7 +80,7 @@ const passMessageToSendbirdBot = async (payload) => {
         'Authorization': `Bearer ${process.env.SLACK_AUTH_TOKEN}`, // Replace YOUR_SLACK_TOKEN with your actual Slack token
         'Content-Type': 'application/json; charset=utf-8'
       }
-      const result = await axios.post("https://slack.com/api/auth.testn", {headers})
+      const result = await axios.post("https://slack.com/api/auth.test", {headers})
             console.log("working 2", result.data)
  
       
@@ -94,7 +94,24 @@ const passMessageToSendbirdBot = async (payload) => {
       
       const result2 = await axios.post("https://slack.com/api/conversations.open", body, {headers})
       
-      console.log("working 3", result2.data)
+      console.log("working 3", result2.data.channel)
+      
+      
+//       working 3 {
+//   ok: true,
+//   no_op: true,
+//   already_open: true,
+//   channel: { id: 'D06H7JPPDNG' }
+// }
+      
+      const message = {
+          channel: result2.data.channel.id,
+        text:"Test1"
+      }
+      
+      //if already_open is false send a first message. 
+          const sendmessage = await axios.post("https://slack.com/api/chat.postMessage", message, {headers})
+          console.log("SENT MESSAGE:", sendmessage.data)
     } catch (error) {
         console.error('Error in performFurtherActions:', error);
     }
