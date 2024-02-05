@@ -44,16 +44,17 @@ const authenticateIncomingSlackCalls = (req, res, next) => {
  * @param {Object} payload - The payload received from Slack.
  */
 const passMessageToSendbirdBot = async (payload) => {
+  console.log("working 1")
   
     try {
-        const response = await axios.post(`https://api-${process.env.SENDBIRD_APP_ID}.sendbird.com/v3/bots/banana_savvy/ai_chatbot_replies`, {
-            messages: [
-              { role: 'user', content: payload.text }
-            ]
-        }, {
-            headers: { 'Api-Token': process.env.SENDBIRD_API_TOKEN, 'Content-Type': 'application/json' },
-            maxBodyLength: Infinity
-        });
+        // const response = await axios.post(`https://api-${process.env.SENDBIRD_APP_ID}.sendbird.com/v3/bots/banana_savvy/ai_chatbot_replies`, {
+        //     messages: [
+        //       { role: 'user', content: payload.text }
+        //     ]
+        // }, {
+        //     headers: { 'Api-Token': process.env.SENDBIRD_API_TOKEN, 'Content-Type': 'application/json' },
+        //     maxBodyLength: Infinity
+        // });
 
 //       {
 //   token: 'FkCzxzrvz4bvrVbxLYy7bTW0',
@@ -73,13 +74,12 @@ const passMessageToSendbirdBot = async (payload) => {
       
         // const message = { response_type: 'in_channel', text: `${response.data.reply_messages[0]}` };
         // await axios.post(payload.response_url, message);
-      console.log(payload)
       const body = {
         channel: payload.channel_id,
-        ts: 
-        
+        text: "working"
       }
-      await axios.post("https://slack.com/api/chat.update", body)
+      const result = await axios.post("https://slack.com/api/chat.postMessage", body)
+      console.log("working 2", result)
     } catch (error) {
         console.error('Error in performFurtherActions:', error);
     }
@@ -89,8 +89,9 @@ const passMessageToSendbirdBot = async (payload) => {
  * Route to handle messages sent to the bot. Authenticates the request and responds accordingly.
  */
 app.post('/message_to_bot', authenticateIncomingSlackCalls, async (req, res) => {
-    const { text } = req.body;
-    res.json({ response_type: 'in_channel', text: `🤖\n Thinking...` });
+    // const { text } = req.body;
+    // res.sendStatus(200)
+    // // res.json({ response_type: 'in_channel', text: `🤖\n Thinking...` });
     passMessageToSendbirdBot(req.body);
 });
 
