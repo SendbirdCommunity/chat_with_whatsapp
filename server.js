@@ -76,8 +76,8 @@ const passMessageToSendbirdBot = async (payload) => {
         // await axios.post(payload.response_url, message);
       console.log(payload)
       const body = {
-        channel: payload.user_id+payload.channel_id,
-        // user: payload.user_id,
+        channel: payload.channel_id,
+        id: payload.user_id,
         text: "working"
       }
       console.log(body)
