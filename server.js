@@ -44,6 +44,7 @@ const authenticateIncomingSlackCalls = (req, res, next) => {
  * @param {Object} payload - The payload received from Slack.
  */
 const passMessageToSendbirdBot = async (payload) => {
+  
     try {
         const response = await axios.post(`https://api-${process.env.SENDBIRD_APP_ID}.sendbird.com/v3/bots/banana_savvy/ai_chatbot_replies`, {
             messages: [
@@ -54,7 +55,7 @@ const passMessageToSendbirdBot = async (payload) => {
             maxBodyLength: Infinity
         });
 
-        const message = { response_type: 'in_channel', text: `A: ${response.data.reply_messages[0]}` };
+        const message = { response_type: 'in_channel', text: `${response.data.reply_messages[0]}` };
         await axios.post(payload.response_url, message);
     } catch (error) {
         console.error('Error in performFurtherActions:', error);
@@ -66,7 +67,7 @@ const passMessageToSendbirdBot = async (payload) => {
  */
 app.post('/message_to_bot', authenticateIncomingSlackCalls, async (req, res) => {
     const { text } = req.body;
-    res.json({ response_type: 'in_channel', text: `🤖\nQ: ${text}` });
+    res.json({ response_type: 'in_channel', text: `🤖\n Thinking...` });
     passMessageToSendbirdBot(req.body);
 });
 
