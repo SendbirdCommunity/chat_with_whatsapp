@@ -85,9 +85,6 @@ const passMessageToSendbirdBot = async (payload) => {
  
       
             const body = {
-        // channel: payload.channel_id,
-        // id: payload.user_id,
-        // text: "working"
         users: [payload.user_id, result.bot_id ],
         is_private: true
       }
@@ -97,21 +94,17 @@ const passMessageToSendbirdBot = async (payload) => {
       console.log("working 3", result2.data.channel)
       
       
-//       working 3 {
-//   ok: true,
-//   no_op: true,
-//   already_open: true,
-//   channel: { id: 'D06H7JPPDNG' }
-// }
-      
-      const message = {
-          channel: result2.data.channel.id,
-        text:"Test1"
-      }
-      
       //if already_open is false send a first message. 
+      if(result2.already_open === false) {
+        const message = {
+        channel: result2.data.channel.id,
+        text:"Welcome to the start of our conversation"
+      }
           const sendmessage = await axios.post("https://slack.com/api/chat.postMessage", message, {headers})
           console.log("SENT MESSAGE:", sendmessage.data)
+        
+      }
+
     } catch (error) {
         console.error('Error in performFurtherActions:', error);
     }
