@@ -75,19 +75,28 @@ const passMessageToSendbirdBot = async (payload) => {
         // const message = { response_type: 'in_channel', text: `${response.data.reply_messages[0]}` };
         // await axios.post(payload.response_url, message);
       console.log(payload)
-      const body = {
-        channel: payload.channel_id,
-        id: payload.user_id,
-        text: "working"
-      }
+
       console.log(body)
       console.log(process.env.SLACK_AUTH_TOKEN)
       const  headers =  {
         'Authorization': `Bearer ${process.env.SLACK_AUTH_TOKEN}`, // Replace YOUR_SLACK_TOKEN with your actual Slack token
         'Content-Type': 'application/json'
       }
-      const result = await axios.post("https://slack.com/api/chat.postMessage", body, {headers})
-      console.log("working 2", result.data)
+      const result = await axios.post("https://slack.com/api/auth.testn", {headers})
+            console.log("working 2", result.data)
+ 
+      
+            const body = {
+        // channel: payload.channel_id,
+        // id: payload.user_id,
+        // text: "working"
+        users: [payload.user_id,result.bot_id ],
+        is_private: true
+      }
+      
+      const result2 = await axios.post("https://slack.com/api/conversations.open", body, {headers})
+      
+      console.log("working 3", result2.data)
     } catch (error) {
         console.error('Error in performFurtherActions:', error);
     }
