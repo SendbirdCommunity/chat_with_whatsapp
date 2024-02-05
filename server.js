@@ -75,12 +75,10 @@ const passMessageToSendbirdBot = async (payload) => {
         // const message = { response_type: 'in_channel', text: `${response.data.reply_messages[0]}` };
         // await axios.post(payload.response_url, message);
       console.log(payload)
-
-      console.log(body)
       console.log(process.env.SLACK_AUTH_TOKEN)
       const  headers =  {
         'Authorization': `Bearer ${process.env.SLACK_AUTH_TOKEN}`, // Replace YOUR_SLACK_TOKEN with your actual Slack token
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json; charset=utf-8'
       }
       const result = await axios.post("https://slack.com/api/auth.testn", {headers})
             console.log("working 2", result.data)
@@ -90,7 +88,7 @@ const passMessageToSendbirdBot = async (payload) => {
         // channel: payload.channel_id,
         // id: payload.user_id,
         // text: "working"
-        users: [payload.user_id,result.bot_id ],
+        users: [payload.user_id, result.bot_id ],
         is_private: true
       }
       
