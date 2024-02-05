@@ -78,8 +78,13 @@ const passMessageToSendbirdBot = async (payload) => {
         channel: payload.channel_id,
         text: "working"
       }
-      const result = await axios.post("https://slack.com/api/chat.postMessage", body)
-      console.log("working 2", result)
+      console.log(process.env.SLACK_AUTH_TOKEN)
+      const  headers =  {
+        'token': `Bearer ${process.env.SLACK_AUTH_TOKEN}`, // Replace YOUR_SLACK_TOKEN with your actual Slack token
+        'Content-Type': 'application/json'
+      }
+      const result = await axios.post("https://slack.com/api/chat.postMessage", body, headers)
+      console.log("working 2", result.data)
     } catch (error) {
         console.error('Error in performFurtherActions:', error);
     }
