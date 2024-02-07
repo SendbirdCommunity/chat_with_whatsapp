@@ -39,85 +39,68 @@ const authenticateIncomingSlackCalls = (req, res, next) => {
     next();
 };
 
-/**
- * Performs further actions after Slack call authentication, such as making an API request.
- * @param {Object} payload - The payload received from Slack.
- */
-const passMessageToSendbirdBot = async (payload) => {
-
-  
-    try {
-        // const response = await axios.post(`https://api-${process.env.SENDBIRD_APP_ID}.sendbird.com/v3/bots/banana_savvy/ai_chatbot_replies`, {
-        //     messages: [
-        //       { role: 'user', content: payload.text }
-        //     ]
-        // }, {
-        //     headers: { 'Api-Token': process.env.SENDBIRD_API_TOKEN, 'Content-Type': 'application/json' },
-        //     maxBodyLength: Infinity
-        // });
-
-//       {
-//   token: 'FkCzxzrvz4bvrVbxLYy7bTW0',
-//   team_id: 'T0ADCTNEL',
-//   team_domain: 'sendbird',
-//   channel_id: 'DF4F43S6P',
-//   channel_name: 'directmessage',
-//   user_id: 'UF60L0086',
-//   user_name: 'jason.allshorn',
-//   command: '/ask',
-//   text: 'there?',
-//   api_app_id: 'A06G2D6NPQC',
-//   is_enterprise_install: 'false',
-//   response_url: 'https://hooks.slack.com/commands/T0ADCTNEL/6576201349062/2WP00PqRoPF3LSVaN8Tc9b2y',
-//   trigger_id: '6595492611985.10454940496.5a87a1b5b608cc1cf1ed793eb93b956f'
-// }
-      
-        // const message = { response_type: 'in_channel', text: `${response.data.reply_messages[0]}` };
-        // await axios.post(payload.response_url, message);
-      console.log(payload)
-      console.log(process.env.SLACK_AUTH_TOKEN)
-      const  headers =  {
-        'Authorization': `Bearer ${process.env.SLACK_AUTH_TOKEN}`, // Replace YOUR_SLACK_TOKEN with your actual Slack token
+const fetchPreviousSlackMessages = async (channelId) => {
+    const  headers =  {
+        'Authorization': `Bearer ${process.env.SLACK_AUTH_TOKEN}`,
         'Content-Type': 'application/json; charset=utf-8'
-      }
-      const result = await axios.post("https://slack.com/api/auth.test", {headers})
-            console.log("working 2", result.data)
- 
-      
-            const body = {
-        users: [payload.user_id, result.bot_id ],
-        is_private: true
-      }
-      
-      const result2 = await axios.post("https://slack.com/api/conversations.open", body, {headers})
-      
-      console.log("working 3", result2.data.channel)
-      
-      
-      //if already_open is false send a first message. 
-      if(result2.already_open === false) {
-        const message = {
-        channel: result2.data.channel.id,
-        text:"Welcome to the start of our conversation"
-      }
-          const sendmessage = await axios.post("https://slack.com/api/chat.postMessage", message, {headers})
-          console.log("SENT MESSAGE:", sendmessage.data)
-        
-      }
+    }
+    return axios.post('https://slack.com/api/conversations.history', { channel: channelId,limit: 10 }, {headers})
+};
 
-    } catch (error) {
-        console.error('Error in performFurtherActions:', error);
+//Function that gets last 10 message from Slack.
+const formatConversation = (messages) => {
+    return messages.data.messages.reverse().map(message => ({
+        content: message.text,
+        role: message.bot_profile ? 'assistant' : 'user'
+    }));
+}
+
+const askSendbirdAIBot = async (messages) => {
+    const headers = {
+         'Api-Token': process.env.SENDBIRD_API_TOKEN,
+        'Content-Type': 'application/json'
+    }
+    const response = await axios.post(`https://api-${process.env.SENDBIRD_APP_ID}.sendbird.com/v3/bots/${process.env.SENDBIRD_BOT_ID}/ai_chatbot_replies`, { messages }, { headers });
+        return response.data.reply_messages[0]
+};
+
+
+// Post message back to Slack
+const postMessageToSlack = async (channelId, botsReply) => {
+    let message = { channel: channelId, text: botsReply };
+    const headers = {
+        'Authorization': `Bearer ${process.env.SLACK_AUTH_TOKEN}`, // Use your actual Slack token
+        'Content-Type': 'application/json; charset=utf-8'
+    };
+    return await axios.post("https://slack.com/api/chat.postMessage", message, {headers});
+};
+
+// Process message events
+const handleSlackWebhookEvent = async (req) => {
+    const { type, subtype, bot_id, channel } = req.body.event;
+    if (type === "message" && !subtype && bot_id === undefined) {
+        const previousSlackMessages = await fetchPreviousSlackMessages(channel);
+        const formattedConversation = formatConversation(previousSlackMessages);
+        const response = await askSendbirdAIBot(formattedConversation);
+        await postMessageToSlack(channel, response);
     }
 };
 
-/**
- * Route to handle messages sent to the bot. Authenticates the request and responds accordingly.
- */
-app.post('/message_to_bot', authenticateIncomingSlackCalls, async (req, res) => {
-    // const { text } = req.body;
-    // res.sendStatus(200)
-    // // res.json({ response_type: 'in_channel', text: `🤖\n Thinking...` });
-    passMessageToSendbirdBot(req.body);
+// Respond to Slack challenge for URL verification
+const handleSlackChallenge = (req, res) => {
+    if (req.body.challenge) {
+        res.status(200).send(req.body.challenge);
+        return true; // Indicate that the challenge was handled
+    }
+    return false; // Indicate that there was no challenge to handle
+};
+
+app.post('/messages', authenticateIncomingSlackCalls, async (req, res) => {
+  console.log(req)
+    if (!handleSlackChallenge(req, res)) {
+        res.sendStatus(200); // Acknowledge the event immediately
+        await handleSlackWebhookEvent(req); // Process the event asynchronously
+    }
 });
 
 /**
