@@ -86,11 +86,14 @@ const handleSlackWebhookEvent = async (req) => {
     const formattedConversation = formatConversation(previousSlackMessages);
     const response = await askSendbirdAIBot(formattedConversation);
     await postMessageToSlack(channel, response);
+  } else {
+    console.log(type)
   }
 };
 
 // Respond to Slack challenge for URL verification
 const handleSlackChallenge = (req, res) => {
+
   if (req.body.challenge) {
     res.status(200).send(req.body.challenge);
     return true; // Indicate that the challenge was handled
@@ -99,7 +102,7 @@ const handleSlackChallenge = (req, res) => {
 };
 
 app.post("/messages", authenticateIncomingSlackCalls, async (req, res) => {
-  console.log(req);
+  
   if (!handleSlackChallenge(req, res)) {
     res.sendStatus(200); // Acknowledge the event immediately
     await handleSlackWebhookEvent(req); // Process the event asynchronously
