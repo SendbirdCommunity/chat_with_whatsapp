@@ -18,7 +18,7 @@ const secureCompare = (a, b) => crypto.timingSafeEqual(Buffer.from(a, 'utf8'), B
  * Middleware to authenticate incoming Slack calls by verifying their signature.
  */
 const authenticateIncomingSlackCalls = (req, res, next) => {
-    
+    console.log("auth hit")
     const timestamp = req.headers['x-slack-request-timestamp'];
     if (!timestamp || Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) {
         return res.status(400).send('Error: Invalid request.');
