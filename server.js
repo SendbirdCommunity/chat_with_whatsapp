@@ -83,10 +83,8 @@ const postMessageToSlack = async (channelId, botsReply) => {
 const handleSlackWebhookEvent = async (req) => {
   
   const { type, subtype, bot_id, channel } = req.body.event;
-  console.log(type)
   if (type === "message" && !subtype && bot_id === undefined) {
     const previousSlackMessages = await fetchPreviousSlackMessages(channel);
-
     const formattedConversation = formatConversation(previousSlackMessages);
     const response = await askSendbirdAIBot(formattedConversation);
     const result = await postMessageToSlack(channel, response);
@@ -98,7 +96,6 @@ const handleSlackWebhookEvent = async (req) => {
 
 // Respond to Slack challenge for URL verification
 const handleSlackChallenge = (req, res) => {
-
   if (req.body.challenge) {
     res.status(200).send(req.body.challenge);
     return true; // Indicate that the challenge was handled
