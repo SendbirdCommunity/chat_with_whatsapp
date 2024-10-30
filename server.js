@@ -12,16 +12,38 @@ app.use(express.urlencoded({ extended: true, verify: (req, _, buf) => { req.rawB
 
 
 
-app.post("/messages",  async (req, res) => {
-    console.log("POSTED HERE")
-    console.log(req.body)
-    const changes = req.body.entry
-    changes.forEach(entry => {
-      console.log(entry.changes)
-    })
+app.post("/messages", async (req, res) => {
+    console.log("POSTED HERE");
+    parseWebhookData(req.body.entry);  // Call the function to parse data
     res.sendStatus(200); // Acknowledge the event immediately
-
 });
+
+function parseWebhookData(entries) {
+    entries.forEach(entry => {
+        // Loop through each change within the entry
+        entry.changes.forEach(change => {
+            console.log("Field:", change.field);  // logs 'messages' or any other field
+
+            // Extract specific properties from the change object
+            const messagingProduct = change.value.messaging_product;
+            const metadata = change.value.metadata;    // Metadata object
+            const contacts = change.value.contacts;    // Array of contact objects
+            const messages = change.value.messages;    // Array of message objects
+
+            console.log("Messaging Product:", messagingProduct);
+            console.log("Metadata:", metadata);
+
+            // Loop through contacts and messages if they are arrays
+            contacts.forEach(contact => {
+                console.log("Contact:", contact);
+            });
+
+            messages.forEach(message => {
+                console.log("Message:", message);
+            });
+        });
+    });
+}
 
 const VERIFY_TOKEN = "mySecureVerifyToken123!";  // Replace with your custom token
 
