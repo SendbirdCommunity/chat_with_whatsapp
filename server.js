@@ -1,21 +1,23 @@
 require('dotenv').config();
+
 const express = require("express");
 const axios = require("axios");
-const crypto = require("crypto");
-const app = express();
 const fs = require("fs");
+const app = express();
 let channelMap = {};
 
-// Load sensitive tokens from .env file
-const SENDBIRD_API_TOKEN = process.env.SENDBIRD_API_TOKEN; // Replace with your Sendbird API token from the Sendbird Dashboard --> Your app --> Settings --> General --> Secondard API tokens
-const SENDBIRD_APP_ID = process.env.SENDBIRD_APP_ID; // Replace with your Sendbird API token from the Sendbird Dashboard --> Your app --> Settings --> General --> APP ID
-const WHATSAPP_AUTH_TOKEN = process.env.WHATSAPP_AUTH_TOKEN; //Replace with your phone id in the meta developer dashboard --> WhatsApp --> API Setup --> Access Token
-const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID; //Replace with your phone id in the meta developer dashboard --> WhatsApp --> API Setup --> Phone number ID. 
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN; // Replace with your custom token set in the meta developer dashboard --> WhatsApp --> Configuration --> verify token
+// 1. Load Sensitive Tokens from .env File
+const SENDBIRD_API_TOKEN = process.env.SENDBIRD_API_TOKEN;
+const SENDBIRD_APP_ID = process.env.SENDBIRD_APP_ID;
+const WHATSAPP_AUTH_TOKEN = process.env.WHATSAPP_AUTH_TOKEN;
+const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
+// 2. Middleware Setup
+app.use(express.json({ verify: (req, _, buf) => { req.rawBody = buf; } }));
+app.use(express.urlencoded({ extended: true, verify: (req, _, buf) => { req.rawBody = buf; } }));
 
-
-
+// 3. Load or Initialize Channel Map
 try {
     const data = fs.readFileSync("channelMap.json", "utf8");
     channelMap = JSON.parse(data);
@@ -35,29 +37,29 @@ function updateChannelMap(userId, channelUrl) {
     });
 }
 
-// Create a custom axios instance with default settings
+// 4. Sendbird Axios Instance
 const sendbirdAxios = axios.create({
-    baseURL: "https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3",
+    baseURL: `https://api-${SENDBIRD_APP_ID}.sendbird.com/v3`,
     headers: {
         "Content-Type": "application/json",
         "Api-Token": SENDBIRD_API_TOKEN
     }
 });
 
+// 5. Webhook Endpoints
 
-// Webhook endpoint for receiving messages
+// Handle Incoming Messages from WhatsApp
 app.post("/messages", async (req, res) => {
     console.log("POSTED HERE");
-    parseWebhookData(req.body.entry);  // Call the function to parse data
-    res.sendStatus(200); // Acknowledge the event immediately
+    parseWebhookData(req.body.entry);
+    res.sendStatus(200);
 });
 
-// Verification for GET requests
+// Verify Webhook
 app.get("/messages", (req, res) => {
     const mode = req.query["hub.mode"];
     const token = req.query["hub.verify_token"];
     const challenge = req.query["hub.challenge"];
-
     if (mode && token === VERIFY_TOKEN) {
         res.status(200).send(challenge);
     } else {
@@ -65,9 +67,25 @@ app.get("/messages", (req, res) => {
     }
 });
 
-/**
- * Extracts the chat code from the message text.
- */
+// Handle Incoming Messages from Sendbird
+app.post("/webhook/sendbird", async (req, res) => {
+    console.log(req.body);
+    const event = req.body;
+    res.sendStatus(200);
+    if (event.category === "group_channel:message_send" && event.channel.channel_url.includes("iswhatsapp_")) {
+        const { message, channel } = event.payload;
+        const channel_url = channel.channel_url;
+        const phoneNumber = extractPhoneNumberFromChannelUrl(channel_url);
+        console.log(`Forwarding message to ${phoneNumber}: ${message}`);
+        if (!channelMap[event.sender.user_id]) {
+            forwardMessageToWhatsApp(phoneNumber, message);
+        }
+    }
+});
+
+// 6. Utility Functions
+
+// Extract Chat Code from Message Text
 function extractChatCode(inputString) {
     const match = inputString.match(/code:(.+)/);
     const result = match ? match[1].trim() : null;
@@ -79,50 +97,43 @@ function extractChatCode(inputString) {
     }
 }
 
-/**
- * Parses incoming webhook data and processes each entry.
- */
+// Extract Phone Number from Channel URL
+function extractPhoneNumberFromChannelUrl(channelUrl) {
+    const parts = channelUrl.split("_");
+    return parts[2];
+}
+
+// 7. Core Processing Functions
+
+// Parse Webhook Data and Process Each Entry
 async function parseWebhookData(entries) {
     entries.forEach(async (entry) => {
         entry.changes.forEach(async (change) => {
             console.log("Field:", change.field);
-            const messagingProduct = change.value.messaging_product;
-            const metadata = change.value.metadata;
-            const contacts = change.value.contacts;
-            const messages = change.value.messages;
-
-            // console.log("Messaging Product:", messagingProduct);
-            // console.log("Metadata:", metadata);
+            const { contacts, messages } = change.value;
             try {
-              
-            contacts.forEach(contact => console.log("Contact:", contact));
-            for (const message of messages) {
-                if (message.type === 'text') {
-                    console.log("FOUND TEXT MESSAGE")
-                    await handleTextMessage(message);
+                contacts.forEach(contact => console.log("Contact:", contact));
+                for (const message of messages) {
+                    if (message.type === 'text') {
+                        console.log("FOUND TEXT MESSAGE");
+                        await handleTextMessage(message);
+                    }
                 }
+            } catch (e) {
+                console.log("non_message_webhook", entry);
             }
-            } catch(e){
-              console.log("non_message_webhook", entry)
-            }
-
         });
     });
 }
 
-/**
- * Handles a text message by extracting chat code, managing Sendbird channels and users.
- */
+// Handle Text Message by Extracting Chat Code and Managing Sendbird Channels/Users
 async function handleTextMessage(message) {
     const code = extractChatCode(message.text.body);
-
+    const userId = message.from;
     if (code) {
+        const { merchant: merchantId, product } = code;
         console.log("Starting new conversation with code:", code);
-        const merchantId = code.merchant;
-        const product = code.product;
-        const userId = message.from;
-
-        let channelExists = await checkExistingChannel(merchantId, userId);
+        const channelExists = await checkExistingChannel(merchantId, userId);
         if (!channelExists) {
             const userExists = await checkUserExistsOnSendbird(userId);
             if (!userExists) await createUserOnSendbird(userId);
@@ -130,15 +141,12 @@ async function handleTextMessage(message) {
         }
         await sendMarkerMessage(userId, merchantId);
     } else {
-        console.log("Sending user message to merchant")
-        const userId = message.from;
-        await sendMessageToMerchant(userId, channelMap[userId], message.text.body)
+        console.log("Sending user message to merchant");
+        await sendMessageToMerchant(userId, channelMap[userId], message.text.body);
     }
 }
 
-/**
- * Checks if a channel exists between a merchant and a user.
- */
+// Check if a Channel Exists Between Merchant and User
 async function checkExistingChannel(merchantId, userId) {
     try {
         const response = await sendbirdAxios.get(`/group_channels/iswhatsapp_${merchantId}_${userId}`);
@@ -149,9 +157,7 @@ async function checkExistingChannel(merchantId, userId) {
     }
 }
 
-/**
- * Checks if a user exists on Sendbird.
- */
+// Check if a User Exists on Sendbird
 async function checkUserExistsOnSendbird(userId) {
     try {
         const response = await sendbirdAxios.get(`/users/${userId}`);
@@ -162,9 +168,7 @@ async function checkUserExistsOnSendbird(userId) {
     }
 }
 
-/**
- * Creates a new user on Sendbird if they do not exist.
- */
+// Create a New User on Sendbird
 async function createUserOnSendbird(userId) {
     try {
         await sendbirdAxios.post("/users", { user_id: userId, nickname: "x", profile_url: "" });
@@ -174,36 +178,26 @@ async function createUserOnSendbird(userId) {
     }
 }
 
-/**
- * Creates a new channel on Sendbird.
- */
+// Create a New Channel on Sendbird
 async function createChannelOnSendbird(userId, merchantId) {
+    const channelUrl = `iswhatsapp_${merchantId}_${userId}`;
     try {
-        const channelUrl = `iswhatsapp_${merchantId}_${userId}`;
         await sendbirdAxios.post("/group_channels", { 
             user_ids: [userId, merchantId],
             name: "WhatsApp",
             channel_url: channelUrl
         });
         console.log("Channel created!");
-        
-        // Update the mapping after creating the channel
         updateChannelMap(userId, channelUrl);
     } catch (error) {
         console.log(`Error creating channel: ${error}`);
     }
 }
 
-/**
- * Sends a regular message to the merchant.
- */
-/**
- * Sends a marker message to the user on WhatsApp and to the merchant on Sendbird.
- * @param {string} userId - The user ID on WhatsApp.
- * @param {string} merchantId - The merchant ID on Sendbird.
- */
+// 8. Message Forwarding Functions
+
+// Send a Regular Message to the Merchant
 async function sendMessageToMerchant(userId, channelUrl, message) {
-    // Send marker message to Sendbird
     try {
         await sendbirdAxios.post(`/group_channels/${channelUrl}/messages`, {
             user_id: userId,
@@ -215,18 +209,8 @@ async function sendMessageToMerchant(userId, channelUrl, message) {
     }
 }
 
-
-
-/**
- * Sends a marker message to the user and the merchant.
- */
-/**
- * Sends a marker message to the user on WhatsApp and to the merchant on Sendbird.
- * @param {string} userId - The user ID on WhatsApp.
- * @param {string} merchantId - The merchant ID on Sendbird.
- */
+// Send Marker Message to User on WhatsApp and Merchant on Sendbird
 async function sendMarkerMessage(userId, merchantId) {
-    // Send marker message to Sendbird
     try {
         await sendbirdAxios.post(`/group_channels/iswhatsapp_${merchantId}_${userId}/messages`, {
             user_id: userId,
@@ -236,12 +220,9 @@ async function sendMarkerMessage(userId, merchantId) {
     } catch (error) {
         console.log(`Error sending marker message on Sendbird: ${error}`);
     }
-
-    // Send marker message to WhatsApp
     try {
-        const whatsAppPhonenumberId = WHATSAPP_PHONE_ID
         await axios.post(
-            `https://graph.facebook.com/v20.0/${whatsAppPhonenumberId}/messages`, // Replace with actual WhatsApp API endpoint
+            `https://graph.facebook.com/v20.0/${WHATSAPP_PHONE_ID}/messages`,
             {
                 messaging_product: "whatsapp",
                 to: userId,
@@ -263,58 +244,16 @@ async function sendMarkerMessage(userId, merchantId) {
     }
 }
 
-
-//Create a service that listens for sendbird messages... 
-// Webhook endpoint to receive all messages from Sendbird
-app.post("/webhook/sendbird", async (req, res) => {
-    console.log(req.body)
-    const event = req.body;
-
-    // Send 200 OK immediately to Sendbird to acknowledge receipt
-    res.sendStatus(200);
-
-    // Check if the event is a 'message:send' and the channel URL contains 'iswhatsapp_'
-    if (event.category === "group_channel:message_send" && event.channel.channel_url.includes("iswhatsapp_")) {
-      console.log(event)
-        // const { message, channel } = event;
-        const channel = event.channel
-        const messageText = event.payload.message
-        const channel_url = channel.channel_url;
-        const sender = event.sender.user_id
-        
-        // Extract phone number (userId) from channel URL
-        const phoneNumber = extractPhoneNumberFromChannelUrl(channel_url);
-
-        console.log(`Forwarding message to ${phoneNumber}: ${messageText}`);
-
-        // Forward the message to WhatsApp asynchronously
-        if(!channelMap[sender]){
-          forwardMessageToWhatsApp(phoneNumber, messageText);  
-        }
-        
-    }
-});
-
-// Function to extract phone number (userId) from channel URL
-function extractPhoneNumberFromChannelUrl(channelUrl) {
-    // Extracts the third part as the userId (phone number)
-    const parts = channelUrl.split("_");
-    return parts[2]; // Assumes `iswhatsapp_${merchantId}_${userId}` structure
-}
-
-// Function to forward the message to WhatsApp
+// Forward Message to WhatsApp
 async function forwardMessageToWhatsApp(phoneNumber, messageText) {
-  const whatsAppPhonenumberId = WHATSAPP_PHONE_ID
     try {
         await axios.post(
-            `https://graph.facebook.com/v20.0/${whatsAppPhonenumberId}/messages`, // WhatsApp API endpoint
+            `https://graph.facebook.com/v20.0/${WHATSAPP_PHONE_ID}/messages`,
             {
                 messaging_product: "whatsapp",
                 to: phoneNumber,
                 type: "text",
-                text: {
-                    body: messageText
-                }
+                text: { body: messageText }
             },
             {
                 headers: {
@@ -329,8 +268,5 @@ async function forwardMessageToWhatsApp(phoneNumber, messageText) {
     }
 }
 
-
-
-
-// Start the server
-app.listen(3000, () => console.log("Server started on port 3000"));
+// 9. Start Server
+app.listen(3000, () => console.log("Server
