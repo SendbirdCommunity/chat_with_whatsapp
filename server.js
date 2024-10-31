@@ -3,29 +3,43 @@ require('dotenv').config();
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
+const CryptoJS = require("crypto-js");
 const app = express();
 let channelMap = {};
 
 
 // Use a secret key and IV from your environment variables
-//https://generate-random.org/encryption-key-generator --> Generate Encryption Keys
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Must be 32 characters (256 bits, 32)
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Must be 32 characters (256 bits)
 const IV = process.env.IV; // Must be 16 characters (128 bits)
 
+// Generate a 32-byte key (256 bits) for AES-256 encryption
+// const key = crypto.randomBytes(32).toString("hex"); // 32 bytes -> 64 hex characters
+// // Generate a 16-byte IV (128 bits) for AES-256-CBC
+// const iv = crypto.randomBytes(16).toString("hex"); // 16 bytes -> 32 hex characters
+
+// Convert ENCRYPTION_KEY and IV to WordArray objects for crypto-js
+const key = CryptoJS.enc.Hex.parse(ENCRYPTION_KEY);
+const iv = CryptoJS.enc.Hex.parse(IV);
+
+// Encrypt function
 function encrypt(text) {
-    const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(ENCRYPTION_KEY), IV);
-    let encrypted = cipher.update(text, "utf8", "hex");
-    encrypted += cipher.final("hex");
-    return encrypted;
+    const encrypted = CryptoJS.AES.encrypt(text, key, { iv: iv });
+    return encrypted.toString(); // return Base64-encoded string
 }
 
-function decrypt(text) {
-    const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(ENCRYPTION_KEY), IV);
-    let decrypted = decipher.update(text, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-    return decrypted;
+// Decrypt function
+function decrypt(encryptedText) {
+    const decrypted = CryptoJS.AES.decrypt(encryptedText, key, { iv: iv });
+    return decrypted.toString(CryptoJS.enc.Utf8); // decode to UTF-8
 }
 
+// Test encryption and decryption
+const text = "Yo Jo";
+const encryptedText = encrypt(text);
+const decryptedText = decrypt(encryptedText);
+
+console.log("Encrypted:", encryptedText);
+console.log("Decrypted:", decryptedText);
 
 
 // 1. Load Sensitive Tokens from .env File
