@@ -2,6 +2,28 @@ const express = require("express");
 const axios = require("axios");
 const crypto = require("crypto");
 const app = express();
+const fs = require("fs");
+let channelMap = {};
+
+
+try {
+    const data = fs.readFileSync("channelMap.json", "utf8");
+    channelMap = JSON.parse(data);
+    console.log("Channel map loaded:", channelMap);
+} catch (err) {
+    console.log("No existing channel map found, starting fresh.");
+}
+
+function updateChannelMap(userId, channelUrl) {
+    channelMap[userId] = channelUrl;
+    fs.writeFile("channelMap.json", JSON.stringify(channelMap, null, 2), (err) => {
+        if (err) {
+            console.error("Error saving channel map:", err);
+        } else {
+            console.log(`Mapping saved: ${userId} -> ${channelUrl}`);
+        }
+    });
+}
 
 const VERIFY_TOKEN = "mySecureVerifyToken123!"; // Replace with your custom token
 const SEND_BIRD_API_TOKEN = "779a8f82b664caf59081f1309d4254d0e5e0de9e"; // Replace with your API token
