@@ -205,8 +205,13 @@ async function createChannelOnSendbird(userId, merchantId) {
 async function sendMarkerMessage(userId, merchantId) {
     try {
         await axios.post(`https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3/group_channels/${merchantId}_${userId}/messages`, {
-            to: userId,
+            user_id: userId,
             message: `Marker message to user ${userId} and merchant ${merchantId}`
+        },{      
+          headers: {
+            "Content-Type": "application/json", 
+            "Api-Token": "779a8f82b664caf59081f1309d4254d0e5e0de9e"
+        }
         });
         console.log(`Marker message sent to ${userId} and ${merchantId}`);
     } catch (error) {
