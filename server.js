@@ -248,7 +248,7 @@ async function sendMarkerMessage(userId, merchantId) {
             },
             {
                 headers: {
-                    "Authorization": `Bearer EAARYKrUEl0EBO39bS9LOrTwi3BGlUzTCsoQg7VKJV4zTxSo8I6X1DN674QefP56HYkhNAP4CN0w4Fi3PM8zIsQ29M0Lhjado8bLS7XrgiF6ZAD0Ra9mzLYTP7Kto3jg35tWmgFWeF8g5p9HLMKOrVMCMIn0Ac9c7sfqUQJLh0OXCsDLYsLBwEWGWqCzgtMbTCcVbBZAJC9a6LgGPnZCmPnQ`, // Replace with actual WhatsApp token
+                    "Authorization": `Bearer EAARYKrUEl0EBOZBTxZBwalZAfainiX2M7gZAZBhZBFjMTKhWLI3dodtC2ScviE8g5ZBP4j9T8QSxA9kvSjQosqNj5sZBb2XZBTzLpe2BVfcxYobREYF3zkSfDoe9sS6mi1Q9MMgeyGNiYmbKDz3JhwNn9LSk1DOk2ZBZB1ug8u5yZBEeGBxMWvY9Rul4WmJMhPRsUXgnOgpHUlHbYxXz1eWKZBh40uSAP`,
                     "Content-Type": "application/json"
                 }
             }
@@ -276,6 +276,7 @@ app.post("/webhook/sendbird", async (req, res) => {
         const channel = event.channel
         const messageText = event.payload.message
         const channel_url = channel.channel_url;
+        const sender = event.sender.user_id
         
         // Extract phone number (userId) from channel URL
         const phoneNumber = extractPhoneNumberFromChannelUrl(channel_url);
@@ -283,7 +284,10 @@ app.post("/webhook/sendbird", async (req, res) => {
         console.log(`Forwarding message to ${phoneNumber}: ${messageText}`);
 
         // Forward the message to WhatsApp asynchronously
-        forwardMessageToWhatsApp(phoneNumber, messageText);
+        if(!channelMap[sender]){
+          forwardMessageToWhatsApp(phoneNumber, messageText);  
+        }
+        
     }
 });
 
@@ -310,7 +314,7 @@ async function forwardMessageToWhatsApp(phoneNumber, messageText) {
             },
             {
                 headers: {
-                    "Authorization": `Bearer EAARYKrUEl0EBO39bS9LOrTwi3BGlUzTCsoQg7VKJV4zTxSo8I6X1DN674QefP56HYkhNAP4CN0w4Fi3PM8zIsQ29M0Lhjado8bLS7XrgiF6ZAD0Ra9mzLYTP7Kto3jg35tWmgFWeF8g5p9HLMKOrVMCMIn0Ac9c7sfqUQJLh0OXCsDLYsLBwEWGWqCzgtMbTCcVbBZAJC9a6LgGPnZCmPnQ`, // Replace with actual WhatsApp token,
+                    "Authorization": `Bearer EAARYKrUEl0EBOZBTxZBwalZAfainiX2M7gZAZBhZBFjMTKhWLI3dodtC2ScviE8g5ZBP4j9T8QSxA9kvSjQosqNj5sZBb2XZBTzLpe2BVfcxYobREYF3zkSfDoe9sS6mi1Q9MMgeyGNiYmbKDz3JhwNn9LSk1DOk2ZBZB1ug8u5yZBEeGBxMWvY9Rul4WmJMhPRsUXgnOgpHUlHbYxXz1eWKZBh40uSAP`,
                     "Content-Type": "application/json"
                 }
             }
