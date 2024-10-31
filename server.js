@@ -16,20 +16,35 @@ const IV = process.env.IV; // Must be 16 characters (128 bits)
 // const key = CryptoJS.lib.WordArray.random(32).toString(CryptoJS.enc.Hex); // 32 bytes (256 bits) -> 64 hex characters
 // const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex); // 16 bytes (128 bits) -> 32 hex characters
 
-// Convert ENCRYPTION_KEY and IV to WordArray objects for crypto-js
 const key = CryptoJS.enc.Hex.parse(ENCRYPTION_KEY);
 const iv = CryptoJS.enc.Hex.parse(IV);
+
+
+// URL-safe Base64 encode
+function toUrlSafeBase64(base64String) {
+    return base64String.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// URL-safe Base64 decode
+function fromUrlSafeBase64(urlSafeBase64) {
+    let base64String = urlSafeBase64.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64String.length % 4) {
+        base64String += '=';
+    }
+    return base64String;
+}
 
 // Encrypt function
 function encrypt(text) {
     const encrypted = CryptoJS.AES.encrypt(text, key, { iv: iv });
-    return encrypted.toString(); // return Base64-encoded string
+    return toUrlSafeBase64(encrypted.toString()); // Convert to URL-safe Base64
 }
 
 // Decrypt function
-function decrypt(encryptedText) {
-    const decrypted = CryptoJS.AES.decrypt(encryptedText, key, { iv: iv });
-    return decrypted.toString(CryptoJS.enc.Utf8); // decode to UTF-8
+function decrypt(urlSafeEncryptedText) {
+    const base64EncryptedText = fromUrlSafeBase64(urlSafeEncryptedText); // Convert back to regular Base64
+    const decrypted = CryptoJS.AES.decrypt(base64EncryptedText, key, { iv: iv });
+    return decrypted.toString(CryptoJS.enc.Utf8); // Decode to UTF-8
 }
 
 // Test encryption and decryption
@@ -112,12 +127,16 @@ app.post("/webhook/sendbird", async (req, res) => {
     const event = req.body;
     res.sendStatus(200);
     if (event.category === "group_channel:message_send" && event.channel.channel_url.includes("iswhatsapp_")) {
-        const { message, channel } = event.payload;
+
+        const channel = event.channel
+        const messageText = event.payload.message
         const channel_url = channel.channel_url;
+        const sender = event.sender.user_id
+
         const phoneNumber = extractPhoneNumberFromChannelUrl(channel_url);
-        console.log(`Forwarding message to ${phoneNumber}: ${message}`);
+        console.log(`Forwarding message to ${phoneNumber}: ${messageText}`);
         if (!channelMap[event.sender.user_id]) {
-            forwardMessageToWhatsApp(phoneNumber, message);
+            forwardMessageToWhatsApp(phoneNumber, messageText);
         }
     }
 });
@@ -139,7 +158,7 @@ function extractChatCode(inputString) {
 // Extract Phone Number from Channel URL
 function extractPhoneNumberFromChannelUrl(channelUrl) {
     const parts = channelUrl.split("_");
-    return parts[2];
+    return decrypt(parts[2]);
 }
 
 // 7. Core Processing Functions
