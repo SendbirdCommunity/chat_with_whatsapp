@@ -3,11 +3,21 @@ const axios = require("axios");
 const crypto = require("crypto");
 const app = express();
 
-// Middleware to capture raw body for signature verification.
+const VERIFY_TOKEN = "mySecureVerifyToken123!"; // Replace with your custom token
+const SEND_BIRD_API_TOKEN = "779a8f82b664caf59081f1309d4254d0e5e0de9e"; // Replace with your API token
+
+// Create a custom axios instance with default settings
+const sendbirdAxios = axios.create({
+    baseURL: "https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3",
+    headers: {
+        "Content-Type": "application/json",
+        "Api-Token": SEND_BIRD_API_TOKEN
+    }
+});
+
+// Middleware to capture raw body for signature verification
 app.use(express.json({ verify: (req, _, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true, verify: (req, _, buf) => { req.rawBody = buf; } }));
-
-const VERIFY_TOKEN = "mySecureVerifyToken123!"; // Replace with your custom token
 
 // Webhook endpoint for receiving messages
 app.post("/messages", async (req, res) => {
@@ -31,8 +41,6 @@ app.get("/messages", (req, res) => {
 
 /**
  * Extracts the chat code from the message text.
- * @param {string} inputString - The input message body text.
- * @returns {Object|null} Parsed JSON object if the code is valid, otherwise null.
  */
 function extractChatCode(inputString) {
     const match = inputString.match(/code:(.+)/);
@@ -47,14 +55,11 @@ function extractChatCode(inputString) {
 
 /**
  * Parses incoming webhook data and processes each entry.
- * @param {Array} entries - List of entries from the webhook payload.
  */
 async function parseWebhookData(entries) {
     entries.forEach(async (entry) => {
         entry.changes.forEach(async (change) => {
             console.log("Field:", change.field);
-
-            // Extract properties from the change object
             const messagingProduct = change.value.messaging_product;
             const metadata = change.value.metadata;
             const contacts = change.value.contacts;
@@ -62,22 +67,24 @@ async function parseWebhookData(entries) {
 
             console.log("Messaging Product:", messagingProduct);
             console.log("Metadata:", metadata);
-
-            // Process contacts and messages if they are arrays
-            contacts.forEach(contact => console.log("Contact:", contact));
-
+            try {
+              
+                          contacts.forEach(contact => console.log("Contact:", contact));
             for (const message of messages) {
                 if (message.type === 'text') {
                     await handleTextMessage(message);
                 }
             }
+            } catch(e){
+              console.log("non_message_webhook", entry)
+            }
+
         });
     });
 }
 
 /**
  * Handles a text message by extracting chat code, managing Sendbird channels and users.
- * @param {Object} message - The message object.
  */
 async function handleTextMessage(message) {
     const code = extractChatCode(message.text.body);
@@ -88,20 +95,12 @@ async function handleTextMessage(message) {
         const product = code.product;
         const userId = message.from;
 
-        // Check if a channel exists between merchant and user
         let channelExists = await checkExistingChannel(merchantId, userId);
-
-        // If no channel, ensure user exists and create a channel if necessary
         if (!channelExists) {
             const userExists = await checkUserExistsOnSendbird(userId);
             if (!userExists) await createUserOnSendbird(userId);
-            // Placeholder for creating channel
-            console.log(`Creating new channel for merchant ${merchantId} and user ${userId}`);
-            // Logic to create channel could be added here
-             await createChannelOnSendbird(userId, merchantId)
+            await createChannelOnSendbird(userId, merchantId);
         }
-
-        // Send marker message to user and merchant
         await sendMarkerMessage(userId, merchantId);
     } else {
         console.log("Routing message to existing conversation:", message);
@@ -109,20 +108,12 @@ async function handleTextMessage(message) {
 }
 
 /**
- * Placeholder: Checks if a channel exists between a merchant and a user.
- * @param {string} merchantId - The merchant ID.
- * @param {string} userId - The user ID.
- * @returns {boolean} True if channel exists, otherwise false.
+ * Checks if a channel exists between a merchant and a user.
  */
 async function checkExistingChannel(merchantId, userId) {
     try {
-        const response = await axios.get(`https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3/group_channels/${merchantId}_${userId}`, {}, {
-          headers: {
-            "Content-Type": "application/json", 
-            "Api-Token": "779a8f82b664caf59081f1309d4254d0e5e0de9e"
-          }
-        });
-        return response.status === 200; // Assuming 200 means the channel exists
+        const response = await sendbirdAxios.get(`/group_channels/${merchantId}_${userId}`);
+        return response.status === 200;
     } catch (error) {
         console.log(`Error checking channel existence: ${error}`);
         return false;
@@ -130,19 +121,12 @@ async function checkExistingChannel(merchantId, userId) {
 }
 
 /**
- * Placeholder: Checks if a user exists on Sendbird.
- * @param {string} userId - The user ID.
- * @returns {boolean} True if user exists, otherwise false.
+ * Checks if a user exists on Sendbird.
  */
 async function checkUserExistsOnSendbird(userId) {
     try {
-        const response = await axios.get(`https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3/users/${userId}`,{},{
-          headers: {
-            "Content-Type": "application/json", 
-            "Api-Token": "779a8f82b664caf59081f1309d4254d0e5e0de9e"
-          }
-        });
-        return response.status === 200; // Assuming 200 means user exists
+        const response = await sendbirdAxios.get(`/users/${userId}`);
+        return response.status === 200;
     } catch (error) {
         console.log(`Error checking user existence: ${error}`);
         return false;
@@ -150,23 +134,11 @@ async function checkUserExistsOnSendbird(userId) {
 }
 
 /**
- * Placeholder: Creates a new user on Sendbird if they do not exist.
- * @param {string} userId - The user ID.
+ * Creates a new user on Sendbird if they do not exist.
  */
 async function createUserOnSendbird(userId) {
     try {
-        await axios.post("https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3/users", 
-        { 
-          user_id: userId,
-          nickname: "x", 
-          profile_url: ""
-        },
-        {
-          headers: {
-            "Content-Type": "application/json", 
-            "Api-Token": "779a8f82b664caf59081f1309d4254d0e5e0de9e"
-          }
-        });
+        await sendbirdAxios.post("/users", { user_id: userId, nickname: "x", profile_url: "" });
         console.log(`User created: ${userId}`);
     } catch (error) {
         console.log(`Error creating user: ${error}`);
@@ -174,48 +146,64 @@ async function createUserOnSendbird(userId) {
 }
 
 /**
- * Placeholder: Creates a new channel on Sendbird.
- * @param {string} userId - The user ID.
+ * Creates a new channel on Sendbird.
  */
 async function createChannelOnSendbird(userId, merchantId) {
     try {
-        await axios.post("https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3/group_channels", 
-        { 
-          user_ids: [userId, merchantId],
-          name: "WhatsApp",
-          channel_url: `${merchantId}_${userId}`
-        },
-        {
-          headers: {
-            "Content-Type": "application/json", 
-            "Api-Token": "779a8f82b664caf59081f1309d4254d0e5e0de9e"
-          }
+        await sendbirdAxios.post("/group_channels", { 
+            user_ids: [userId, merchantId],
+            name: "WhatsApp",
+            channel_url: `${merchantId}_${userId}`
         });
-        console.log(`Channel created!`);
+        console.log("Channel created!");
     } catch (error) {
         console.log(`Error creating channel: ${error}`);
     }
 }
 
 /**
- * Placeholder: Sends a marker message to the user and the merchant.
- * @param {string} userId - The user ID.
- * @param {string} merchantId - The merchant ID.
+ * Sends a marker message to the user and the merchant.
+ */
+/**
+ * Sends a marker message to the user on WhatsApp and to the merchant on Sendbird.
+ * @param {string} userId - The user ID on WhatsApp.
+ * @param {string} merchantId - The merchant ID on Sendbird.
  */
 async function sendMarkerMessage(userId, merchantId) {
+    // Send marker message to Sendbird
     try {
-        await axios.post(`https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3/group_channels/${merchantId}_${userId}/messages`, {
+        await sendbirdAxios.post(`/group_channels/${merchantId}_${userId}/messages`, {
             user_id: userId,
             message: `Marker message to user ${userId} and merchant ${merchantId}`
-        },{      
-          headers: {
-            "Content-Type": "application/json", 
-            "Api-Token": "779a8f82b664caf59081f1309d4254d0e5e0de9e"
-        }
         });
-        console.log(`Marker message sent to ${userId} and ${merchantId}`);
+        console.log(`Marker message sent to ${userId} and ${merchantId} on Sendbird`);
     } catch (error) {
-        console.log(`Error sending marker message: ${error}`);
+        console.log(`Error sending marker message on Sendbird: ${error}`);
+    }
+
+    // Send marker message to WhatsApp
+    try {
+        const whatsAppPhonenumberId = 476869702173665
+        await axios.post(
+            `https://graph.facebook.com/v20.0/${whatsAppPhonenumberId}/messages`, // Replace with actual WhatsApp API endpoint
+            {
+                messaging_product: "whatsapp",
+                to: userId,
+                type: "text",
+                text: {
+                    body: `Marker message for conversation with merchant ${merchantId}`
+                }
+            },
+            {
+                headers: {
+                    "Authorization": `Bearer EAARYKrUEl0EBO39bS9LOrTwi3BGlUzTCsoQg7VKJV4zTxSo8I6X1DN674QefP56HYkhNAP4CN0w4Fi3PM8zIsQ29M0Lhjado8bLS7XrgiF6ZAD0Ra9mzLYTP7Kto3jg35tWmgFWeF8g5p9HLMKOrVMCMIn0Ac9c7sfqUQJLh0OXCsDLYsLBwEWGWqCzgtMbTCcVbBZAJC9a6LgGPnZCmPnQ`, // Replace with actual WhatsApp token
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+        console.log(`Marker message sent to ${userId} on WhatsApp`);
+    } catch (error) {
+        console.log(`Error sending marker message on WhatsApp: ${error}`);
     }
 }
 
