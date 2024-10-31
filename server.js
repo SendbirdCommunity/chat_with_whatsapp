@@ -19,6 +19,7 @@ app.post("/messages", async (req, res) => {
 });
 
 function parseWebhookData(entries) {
+  
     entries.forEach(entry => {
         // Loop through each change within the entry
         entry.changes.forEach(change => {
@@ -39,7 +40,13 @@ function parseWebhookData(entries) {
             });
 
             messages.forEach(message => {
-                console.log("Message:", message);
+                //Check if the message is a Click-To-Chat message. 
+                if(message.type === 'text'){
+                const code = message.text.body
+                console.log("Code:", code);             
+                console.log("Message:", message);             
+                }
+     
             });
         });
     });
