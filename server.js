@@ -87,13 +87,14 @@ async function parseWebhookData(entries) {
             const contacts = change.value.contacts;
             const messages = change.value.messages;
 
-            console.log("Messaging Product:", messagingProduct);
-            console.log("Metadata:", metadata);
+            // console.log("Messaging Product:", messagingProduct);
+            // console.log("Metadata:", metadata);
             try {
               
-                          contacts.forEach(contact => console.log("Contact:", contact));
+            contacts.forEach(contact => console.log("Contact:", contact));
             for (const message of messages) {
                 if (message.type === 'text') {
+                    console.log("FOUND TEXT MESSAGE")
                     await handleTextMessage(message);
                 }
             }
@@ -125,11 +126,9 @@ async function handleTextMessage(message) {
         }
         await sendMarkerMessage(userId, merchantId);
     } else {
-
-
-        console.log("Routing message to existing conversation:", message);
-        await sendMessageToMerchant(userId, merchantId, message.text.body)
-        
+        console.log("Sending user message to merchant")
+        const userId = message.from;
+        await sendMessageToMerchant(userId, channelMap[userId], message.text.body)
     }
 }
 
@@ -182,6 +181,7 @@ async function createChannelOnSendbird(userId, merchantId) {
             channel_url: `iswhatsapp_${merchantId}_${userId}`
         });
         console.log("Channel created!");
+        channelMap[userId] = `iswhatsapp_${merchantId}_${userId}`
     } catch (error) {
         console.log(`Error creating channel: ${error}`);
     }
@@ -195,10 +195,10 @@ async function createChannelOnSendbird(userId, merchantId) {
  * @param {string} userId - The user ID on WhatsApp.
  * @param {string} merchantId - The merchant ID on Sendbird.
  */
-async function sendMessageToMerchant(userId, merchantId, message) {
+async function sendMessageToMerchant(userId, channelUrl, message) {
     // Send marker message to Sendbird
     try {
-        await sendbirdAxios.post(`/group_channels/iswhatsapp_${merchantId}_${userId}/messages`, {
+        await sendbirdAxios.post(`/group_channels/${channelUrl}/messages`, {
             user_id: userId,
             message: message
         });
