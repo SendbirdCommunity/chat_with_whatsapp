@@ -7,10 +7,12 @@ const fs = require("fs");
 let channelMap = {};
 
 // Load sensitive tokens from .env file
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN; // Replace with your custom token set in the meta developer dashboard --> Whats
-const SEND_BIRD_API_TOKEN = process.env.SEND_BIRD_API_TOKEN; // Replace with your API token
-const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
-const WHATSAPP_AUTH_TOKEN = process.env.WHATSAPP_AUTH_TOKEN;
+const SENDBIRD_API_TOKEN = process.env.SENDBIRD_API_TOKEN; // Replace with your Sendbird API token from the Sendbird Dashboard --> Your app --> Settings --> General --> Secondard API tokens
+const SENDBIRD_APP_ID = process.env.SENDBIRD_APP_ID; // Replace with your Sendbird API token from the Sendbird Dashboard --> Your app --> Settings --> General --> APP ID
+const WHATSAPP_AUTH_TOKEN = process.env.WHATSAPP_AUTH_TOKEN; //Replace with your phone id in the meta developer dashboard --> WhatsApp --> API Setup --> Access Token
+const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID; //Replace with your phone id in the meta developer dashboard --> WhatsApp --> API Setup --> Phone number ID. 
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN; // Replace with your custom token set in the meta developer dashboard --> WhatsApp --> Configuration --> verify token
+
 
 
 
@@ -38,13 +40,10 @@ const sendbirdAxios = axios.create({
     baseURL: "https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3",
     headers: {
         "Content-Type": "application/json",
-        "Api-Token": SEND_BIRD_API_TOKEN
+        "Api-Token": SENDBIRD_API_TOKEN
     }
 });
 
-// Middleware to capture raw body for signature verification
-app.use(express.json({ verify: (req, _, buf) => { req.rawBody = buf; } }));
-app.use(express.urlencoded({ extended: true, verify: (req, _, buf) => { req.rawBody = buf; } }));
 
 // Webhook endpoint for receiving messages
 app.post("/messages", async (req, res) => {
@@ -240,7 +239,7 @@ async function sendMarkerMessage(userId, merchantId) {
 
     // Send marker message to WhatsApp
     try {
-        const whatsAppPhonenumberId = 476869702173665
+        const whatsAppPhonenumberId = WHATSAPP_PHONE_ID
         await axios.post(
             `https://graph.facebook.com/v20.0/${whatsAppPhonenumberId}/messages`, // Replace with actual WhatsApp API endpoint
             {
@@ -253,7 +252,7 @@ async function sendMarkerMessage(userId, merchantId) {
             },
             {
                 headers: {
-                    "Authorization": `Bearer EAARYKrUEl0EBOZBTxZBwalZAfainiX2M7gZAZBhZBFjMTKhWLI3dodtC2ScviE8g5ZBP4j9T8QSxA9kvSjQosqNj5sZBb2XZBTzLpe2BVfcxYobREYF3zkSfDoe9sS6mi1Q9MMgeyGNiYmbKDz3JhwNn9LSk1DOk2ZBZB1ug8u5yZBEeGBxMWvY9Rul4WmJMhPRsUXgnOgpHUlHbYxXz1eWKZBh40uSAP`,
+                    "Authorization": `Bearer ${WHATSAPP_AUTH_TOKEN}`,
                     "Content-Type": "application/json"
                 }
             }
@@ -305,7 +304,7 @@ function extractPhoneNumberFromChannelUrl(channelUrl) {
 
 // Function to forward the message to WhatsApp
 async function forwardMessageToWhatsApp(phoneNumber, messageText) {
-  const whatsAppPhonenumberId = 476869702173665
+  const whatsAppPhonenumberId = WHATSAPP_PHONE_ID
     try {
         await axios.post(
             `https://graph.facebook.com/v20.0/${whatsAppPhonenumberId}/messages`, // WhatsApp API endpoint
@@ -319,7 +318,7 @@ async function forwardMessageToWhatsApp(phoneNumber, messageText) {
             },
             {
                 headers: {
-                    "Authorization": `Bearer EAARYKrUEl0EBOZBTxZBwalZAfainiX2M7gZAZBhZBFjMTKhWLI3dodtC2ScviE8g5ZBP4j9T8QSxA9kvSjQosqNj5sZBb2XZBTzLpe2BVfcxYobREYF3zkSfDoe9sS6mi1Q9MMgeyGNiYmbKDz3JhwNn9LSk1DOk2ZBZB1ug8u5yZBEeGBxMWvY9Rul4WmJMhPRsUXgnOgpHUlHbYxXz1eWKZBh40uSAP`,
+                    "Authorization": `Bearer ${WHATSAPP_AUTH_TOKEN}`,
                     "Content-Type": "application/json"
                 }
             }
