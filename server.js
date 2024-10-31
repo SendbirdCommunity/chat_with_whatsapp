@@ -153,7 +153,7 @@ async function createChannelOnSendbird(userId, merchantId) {
         await sendbirdAxios.post("/group_channels", { 
             user_ids: [userId, merchantId],
             name: "WhatsApp",
-            channel_url: `${merchantId}_${userId}`
+            channel_url: `iswhatsapp_${merchantId}_${userId}`
         });
         console.log("Channel created!");
     } catch (error) {
@@ -206,6 +206,11 @@ async function sendMarkerMessage(userId, merchantId) {
         console.log(`Error sending marker message on WhatsApp: ${error}`);
     }
 }
+
+
+//Create a service that listens for sendbird messages... 
+
+
 
 // Start the server
 app.listen(3000, () => console.log("Server started on port 3000"));
