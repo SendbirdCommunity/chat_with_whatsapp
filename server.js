@@ -211,7 +211,7 @@ async function sendMarkerMessage(userId, merchantId) {
 //Create a service that listens for sendbird messages... 
 // Webhook endpoint to receive all messages from Sendbird
 app.post("/webhook/sendbird", async (req, res) => {
-    console.log(req.)
+    console.log(req.body)
     const event = req.body;
 
     // Send 200 OK immediately to Sendbird to acknowledge receipt
@@ -219,12 +219,14 @@ app.post("/webhook/sendbird", async (req, res) => {
 
     // Check if the event is a 'message:send' and the channel URL contains 'iswhatsapp_'
     if (event.category === "group_channel:message_send" && event.channel.channel_url.includes("iswhatsapp_")) {
-        const { message, channel } = event;
-        const { channel_url } = channel;
+      console.log(event)
+        // const { message, channel } = event;
+        const channel = event.channel
+        const messageText = event.payload.message
+        const channel_url = channel.channel_url;
         
         // Extract phone number (userId) from channel URL
         const phoneNumber = extractPhoneNumberFromChannelUrl(channel_url);
-        const messageText = message.message;
 
         console.log(`Forwarding message to ${phoneNumber}: ${messageText}`);
 
