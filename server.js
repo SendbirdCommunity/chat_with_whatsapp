@@ -9,37 +9,13 @@ const app = express();
 app.use(express.json({ verify: (req, _, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true, verify: (req, _, buf) => { req.rawBody = buf; } }));
 // 256-bit key
-const key = Buffer.from('12345678901234567890123456789012')
-const iv = crypto.randomBytes(16);  // Initialization vector
 
-function encrypt(merchantId) {
-    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-    let encrypted = cipher.update(merchantId, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return { iv: iv.toString('hex'), encryptedData: encrypted };
-}
-
-function decrypt(encryptedData, iv) {
-    const decipher = crypto.createDecipheriv('aes-256-cbc', key, Buffer.from(iv, 'hex'));
-    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
-}
-
-const encryptedData  = encrypt(JSON.stringify({"merchant":"user1","product":"123"}));
-console.log("Encrypted:", encryptedData);
-console.log("Decrypted:", decrypt(encryptedData.encryptedData, encryptedData.iv));
-
-
-app.post("/messages", async (req, res) => {
-    console.log("POSTED HERE");
-    parseWebhookData(req.body.entry);  // Call the function to parse data
-    res.sendStatus(200); // Acknowledge the event immediately
-});
 
 function extractChatCode(inputString) {
     const match = inputString.match(/code:(.+)/);
-    return match ? match[1].trim() : null;
+    const result = match ? match[1].trim() : null;
+  try
+    return 
 }
 
 // Example usage
