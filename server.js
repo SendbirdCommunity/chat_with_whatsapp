@@ -12,10 +12,9 @@ let channelMap = {};
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Must be 32 characters (256 bits)
 const IV = process.env.IV; // Must be 16 characters (128 bits)
 
-// Generate a 32-byte key (256 bits) for AES-256 encryption
-// const key = crypto.randomBytes(32).toString("hex"); // 32 bytes -> 64 hex characters
-// // Generate a 16-byte IV (128 bits) for AES-256-CBC
-// const iv = crypto.randomBytes(16).toString("hex"); // 16 bytes -> 32 hex characters
+// Use these if you need to generate random keys to use. 
+// const key = CryptoJS.lib.WordArray.random(32).toString(CryptoJS.enc.Hex); // 32 bytes (256 bits) -> 64 hex characters
+// const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex); // 16 bytes (128 bits) -> 32 hex characters
 
 // Convert ENCRYPTION_KEY and IV to WordArray objects for crypto-js
 const key = CryptoJS.enc.Hex.parse(ENCRYPTION_KEY);
@@ -34,12 +33,14 @@ function decrypt(encryptedText) {
 }
 
 // Test encryption and decryption
-const text = "Yo Jo";
+const text = "TEST";
 const encryptedText = encrypt(text);
 const decryptedText = decrypt(encryptedText);
 
 console.log("Encrypted:", encryptedText);
 console.log("Decrypted:", decryptedText);
+
+
 
 
 // 1. Load Sensitive Tokens from .env File
@@ -52,6 +53,7 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 // 2. Middleware Setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 
 // 3. Load or Initialize Channel Map
 try {
@@ -81,6 +83,7 @@ const sendbirdAxios = axios.create({
         "Api-Token": SENDBIRD_API_TOKEN
     }
 });
+
 
 // 5. Webhook Endpoints
 
@@ -165,7 +168,7 @@ async function parseWebhookData(entries) {
 // Handle Text Message by Extracting Chat Code and Managing Sendbird Channels/Users
 async function handleTextMessage(message) {
     const code = extractChatCode(message.text.body);
-    const userId = message.from;
+    const userId = encrypt(message.from);
     if (code) {
         const { merchant: merchantId, product } = code;
         console.log("Starting new conversation with code:", code);
@@ -216,7 +219,9 @@ async function createUserOnSendbird(userId) {
 
 // Create a New Channel on Sendbird
 async function createChannelOnSendbird(userId, merchantId) {
+  
     const channelUrl = `iswhatsapp_${merchantId}_${userId}`;
+    console.log("channel_url", channelUrl)
     try {
         await sendbirdAxios.post("/group_channels", { 
             user_ids: [userId, merchantId],
@@ -226,6 +231,7 @@ async function createChannelOnSendbird(userId, merchantId) {
         console.log("Channel created!");
         updateChannelMap(userId, channelUrl);
     } catch (error) {
+        
         console.log(`Error creating channel: ${error}`);
     }
 }
