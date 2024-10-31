@@ -6,6 +6,28 @@ const fs = require("fs");
 const app = express();
 let channelMap = {};
 
+
+// Use a secret key and IV from your environment variables
+//https://generate-random.org/encryption-key-generator --> Generate Encryption Keys
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Must be 32 characters (256 bits, 32)
+const IV = process.env.IV; // Must be 16 characters (128 bits)
+
+function encrypt(text) {
+    const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(ENCRYPTION_KEY), IV);
+    let encrypted = cipher.update(text, "utf8", "hex");
+    encrypted += cipher.final("hex");
+    return encrypted;
+}
+
+function decrypt(text) {
+    const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(ENCRYPTION_KEY), IV);
+    let decrypted = decipher.update(text, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+    return decrypted;
+}
+
+
+
 // 1. Load Sensitive Tokens from .env File
 const SENDBIRD_API_TOKEN = process.env.SENDBIRD_API_TOKEN;
 const SENDBIRD_APP_ID = process.env.SENDBIRD_APP_ID;
@@ -14,8 +36,8 @@ const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
 // 2. Middleware Setup
-app.use(express.json({ verify: (req, _, buf) => { req.rawBody = buf; } }));
-app.use(express.urlencoded({ extended: true, verify: (req, _, buf) => { req.rawBody = buf; } }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // 3. Load or Initialize Channel Map
 try {
@@ -269,4 +291,5 @@ async function forwardMessageToWhatsApp(phoneNumber, messageText) {
 }
 
 // 9. Start Server
-app.listen(3000, () => console.log("Server
+// Start the server
+app.listen(3000, () => console.log("Server started on port 3000"));
