@@ -9,7 +9,26 @@ const app = express();
 app.use(express.json({ verify: (req, _, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true, verify: (req, _, buf) => { req.rawBody = buf; } }));
 
+const key = crypto.randomBytes(32); // 256-bit key
+const iv = crypto.randomBytes(16);  // Initialization vector
 
+function encrypt(merchantId) {
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+    let encrypted = cipher.update(merchantId, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return { iv: iv.toString('hex'), encryptedData: encrypted };
+}
+
+function decrypt(encryptedData, iv) {
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, Buffer.from(iv, 'hex'));
+    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+}
+
+const encryptedData  = encrypt("Merchant123");
+console.log("Encrypted:", encryptedData);
+console.log("Decrypted:", decrypt(encryptedData.encryptedData, encryptedData.iv));
 
 
 app.post("/messages", async (req, res) => {
