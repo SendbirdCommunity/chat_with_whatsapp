@@ -112,7 +112,7 @@ async function handleTextMessage(message) {
  */
 async function checkExistingChannel(merchantId, userId) {
     try {
-        const response = await sendbirdAxios.get(`/group_channels/${merchantId}_${userId}`);
+        const response = await sendbirdAxios.get(`/group_channels/iswhatsapp_${merchantId}_${userId}`);
         return response.status === 200;
     } catch (error) {
         console.log(`Error checking channel existence: ${error}`);
@@ -172,7 +172,7 @@ async function createChannelOnSendbird(userId, merchantId) {
 async function sendMarkerMessage(userId, merchantId) {
     // Send marker message to Sendbird
     try {
-        await sendbirdAxios.post(`/group_channels/${merchantId}_${userId}/messages`, {
+        await sendbirdAxios.post(`/group_channels/iswhatsapp_${merchantId}_${userId}/messages`, {
             user_id: userId,
             message: `Marker message to user ${userId} and merchant ${merchantId}`
         });
@@ -209,6 +209,64 @@ async function sendMarkerMessage(userId, merchantId) {
 
 
 //Create a service that listens for sendbird messages... 
+// Webhook endpoint to receive all messages from Sendbird
+app.post("/webhook/sendbird", async (req, res) => {
+    console.log(req.)
+    const event = req.body;
+
+    // Send 200 OK immediately to Sendbird to acknowledge receipt
+    res.sendStatus(200);
+
+    // Check if the event is a 'message:send' and the channel URL contains 'iswhatsapp_'
+    if (event.category === "group_channel:message_send" && event.channel.channel_url.includes("iswhatsapp_")) {
+        const { message, channel } = event;
+        const { channel_url } = channel;
+        
+        // Extract phone number (userId) from channel URL
+        const phoneNumber = extractPhoneNumberFromChannelUrl(channel_url);
+        const messageText = message.message;
+
+        console.log(`Forwarding message to ${phoneNumber}: ${messageText}`);
+
+        // Forward the message to WhatsApp asynchronously
+        forwardMessageToWhatsApp(phoneNumber, messageText);
+    }
+});
+
+// Function to extract phone number (userId) from channel URL
+function extractPhoneNumberFromChannelUrl(channelUrl) {
+    // Extracts the third part as the userId (phone number)
+    const parts = channelUrl.split("_");
+    return parts[2]; // Assumes `iswhatsapp_${merchantId}_${userId}` structure
+}
+
+// Function to forward the message to WhatsApp
+async function forwardMessageToWhatsApp(phoneNumber, messageText) {
+  const whatsAppPhonenumberId = 476869702173665
+    try {
+        await axios.post(
+            `https://graph.facebook.com/v20.0/${whatsAppPhonenumberId}/messages`, // WhatsApp API endpoint
+            {
+                messaging_product: "whatsapp",
+                to: phoneNumber,
+                type: "text",
+                text: {
+                    body: messageText
+                }
+            },
+            {
+                headers: {
+                    "Authorization": `Bearer EAARYKrUEl0EBO39bS9LOrTwi3BGlUzTCsoQg7VKJV4zTxSo8I6X1DN674QefP56HYkhNAP4CN0w4Fi3PM8zIsQ29M0Lhjado8bLS7XrgiF6ZAD0Ra9mzLYTP7Kto3jg35tWmgFWeF8g5p9HLMKOrVMCMIn0Ac9c7sfqUQJLh0OXCsDLYsLBwEWGWqCzgtMbTCcVbBZAJC9a6LgGPnZCmPnQ`, // Replace with actual WhatsApp token,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+        console.log(`Message forwarded to WhatsApp for ${phoneNumber}`);
+    } catch (error) {
+        console.error(`Error forwarding message to WhatsApp: ${error}`);
+    }
+}
+
 
 
 
