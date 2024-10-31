@@ -1,9 +1,17 @@
+require('dotenv').config();
 const express = require("express");
 const axios = require("axios");
 const crypto = require("crypto");
 const app = express();
 const fs = require("fs");
 let channelMap = {};
+
+// Load sensitive tokens from .env file
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN; // Replace with your custom token set in the meta developer dashboard --> Whats
+const SEND_BIRD_API_TOKEN = process.env.SEND_BIRD_API_TOKEN; // Replace with your API token
+const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
+const WHATSAPP_AUTH_TOKEN = process.env.WHATSAPP_AUTH_TOKEN;
+
 
 
 try {
@@ -24,9 +32,6 @@ function updateChannelMap(userId, channelUrl) {
         }
     });
 }
-
-const VERIFY_TOKEN = "mySecureVerifyToken123!"; // Replace with your custom token
-const SEND_BIRD_API_TOKEN = "779a8f82b664caf59081f1309d4254d0e5e0de9e"; // Replace with your API token
 
 // Create a custom axios instance with default settings
 const sendbirdAxios = axios.create({
