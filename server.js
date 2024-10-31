@@ -18,6 +18,14 @@ app.post("/messages", async (req, res) => {
     res.sendStatus(200); // Acknowledge the event immediately
 });
 
+function extractChatCode(inputString) {
+    const match = inputString.match(/code:(.+)/);
+    return match ? match[1].trim() : null;
+}
+
+// Example usage
+
+
 function parseWebhookData(entries) {
   
     entries.forEach(entry => {
@@ -42,9 +50,22 @@ function parseWebhookData(entries) {
             messages.forEach(message => {
                 //Check if the message is a Click-To-Chat message. 
                 if(message.type === 'text'){
-                const code = message.text.body
+                const code = extractChatCode(message.text.body)
+                if(code){
+                //New conversation start point. 
+                 //get user details - code.merchant and hashed message.from  
+                //1 Send marker message back to use and to merchant. 
+                     
+                  //Check if there is a channel between the two. 
+                      //If not check if the user exists on Sendbird and create if they do not. 
+            
                 console.log("Code:", code);             
-                console.log("Message:", message);             
+                console.log("Message:", message);    
+                } else {
+                  //Route message to existing conversation. 
+                  console.log("Message only:", message);  
+                }
+                           
                 }
      
             });
