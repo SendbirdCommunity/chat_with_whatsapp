@@ -103,7 +103,11 @@ async function handleTextMessage(message) {
         }
         await sendMarkerMessage(userId, merchantId);
     } else {
+
+
         console.log("Routing message to existing conversation:", message);
+        await sendMessageToMerchant(userId, merchantId, message.text.body)
+        
     }
 }
 
@@ -160,6 +164,29 @@ async function createChannelOnSendbird(userId, merchantId) {
         console.log(`Error creating channel: ${error}`);
     }
 }
+
+/**
+ * Sends a regular message to the merchant.
+ */
+/**
+ * Sends a marker message to the user on WhatsApp and to the merchant on Sendbird.
+ * @param {string} userId - The user ID on WhatsApp.
+ * @param {string} merchantId - The merchant ID on Sendbird.
+ */
+async function sendMessageToMerchant(userId, merchantId, message) {
+    // Send marker message to Sendbird
+    try {
+        await sendbirdAxios.post(`/group_channels/iswhatsapp_${merchantId}_${userId}/messages`, {
+            user_id: userId,
+            message: message
+        });
+        console.log(`Message sent to merchant ${merchantId} on Sendbird`);
+    } catch (error) {
+        console.log(`Error sending message to merchant on Sendbird: ${error}`);
+    }
+}
+
+
 
 /**
  * Sends a marker message to the user and the merchant.
