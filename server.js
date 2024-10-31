@@ -8,8 +8,8 @@ const app = express();
  */
 app.use(express.json({ verify: (req, _, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true, verify: (req, _, buf) => { req.rawBody = buf; } }));
-
-const key = crypto.randomBytes(32); // 256-bit key
+// 256-bit key
+const key = Buffer.from('12345678901234567890123456789012')
 const iv = crypto.randomBytes(16);  // Initialization vector
 
 function encrypt(merchantId) {
@@ -26,7 +26,7 @@ function decrypt(encryptedData, iv) {
     return decrypted;
 }
 
-const encryptedData  = encrypt("Merchant123");
+const encryptedData  = encrypt(JSON.stringify({"merchant":"user1","product":"123"}));
 console.log("Encrypted:", encryptedData);
 console.log("Decrypted:", decrypt(encryptedData.encryptedData, encryptedData.iv));
 
