@@ -98,6 +98,7 @@ async function handleTextMessage(message) {
             // Placeholder for creating channel
             console.log(`Creating new channel for merchant ${merchantId} and user ${userId}`);
             // Logic to create channel could be added here
+             await createChannelOnSendbird(userId, merchantId)
         }
 
         // Send marker message to user and merchant
@@ -154,10 +155,45 @@ async function checkUserExistsOnSendbird(userId) {
  */
 async function createUserOnSendbird(userId) {
     try {
-        await axios.post("https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3/users", { user_id: userId },);
+        await axios.post("https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3/users", 
+        { 
+          user_id: userId,
+          nickname: "x", 
+          profile_url: ""
+        },
+        {
+          headers: {
+            "Content-Type": "application/json", 
+            "Api-Token": "779a8f82b664caf59081f1309d4254d0e5e0de9e"
+          }
+        });
         console.log(`User created: ${userId}`);
     } catch (error) {
         console.log(`Error creating user: ${error}`);
+    }
+}
+
+/**
+ * Placeholder: Creates a new channel on Sendbird.
+ * @param {string} userId - The user ID.
+ */
+async function createChannelOnSendbird(userId, merchantId) {
+    try {
+        await axios.post("https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3/group_channels", 
+        { 
+          user_ids: [userId, merchantId],
+          name: "WhatsApp",
+          channel_url: `${merchantId}_${userId}`
+        },
+        {
+          headers: {
+            "Content-Type": "application/json", 
+            "Api-Token": "779a8f82b664caf59081f1309d4254d0e5e0de9e"
+          }
+        });
+        console.log(`Channel created!`);
+    } catch (error) {
+        console.log(`Error creating channel: ${error}`);
     }
 }
 
@@ -168,7 +204,7 @@ async function createUserOnSendbird(userId) {
  */
 async function sendMarkerMessage(userId, merchantId) {
     try {
-        await axios.post(`/v3/messages`, {
+        await axios.post(`https://api-D70D1F08-9EEB-4C33-82B6-639E6D652564.sendbird.com/v3/group_channels/${merchantId}_${userId}/messages`, {
             to: userId,
             message: `Marker message to user ${userId} and merchant ${merchantId}`
         });
