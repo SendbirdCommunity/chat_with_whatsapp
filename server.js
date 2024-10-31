@@ -175,13 +175,16 @@ async function createUserOnSendbird(userId) {
  */
 async function createChannelOnSendbird(userId, merchantId) {
     try {
+        const channelUrl = `iswhatsapp_${merchantId}_${userId}`;
         await sendbirdAxios.post("/group_channels", { 
             user_ids: [userId, merchantId],
             name: "WhatsApp",
-            channel_url: `iswhatsapp_${merchantId}_${userId}`
+            channel_url: channelUrl
         });
         console.log("Channel created!");
-        channelMap[userId] = `iswhatsapp_${merchantId}_${userId}`
+        
+        // Update the mapping after creating the channel
+        updateChannelMap(userId, channelUrl);
     } catch (error) {
         console.log(`Error creating channel: ${error}`);
     }
