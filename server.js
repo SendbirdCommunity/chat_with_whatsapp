@@ -80,6 +80,8 @@ try {
 }
 
 function updateChannelMap(userId, channelUrl) {
+    console.log(`Attempting to update channelMap with: ${userId} -> ${channelUrl}`);
+
     channelMap[userId] = channelUrl;
     fs.writeFile("channelMap.json", JSON.stringify(channelMap, null, 2), (err) => {
         if (err) {
@@ -196,6 +198,7 @@ async function handleTextMessage(message) {
             const userExists = await checkUserExistsOnSendbird(userId);
             if (!userExists) await createUserOnSendbird(userId);
             await createChannelOnSendbird(userId, merchantId);
+
         }
         await sendMarkerMessage(userId, merchantId);
     } else {
@@ -221,7 +224,7 @@ async function checkUserExistsOnSendbird(userId) {
         const response = await sendbirdAxios.get(`/users/${userId}`);
         return response.status === 200;
     } catch (error) {
-        console.log(`Error checking user existence: ${error}`);
+        console.log(`Error checking user existence: ${error}`);updateChannelMap
         return false;
     }
 }
@@ -328,7 +331,7 @@ async function forwardMessageToWhatsApp(phoneNumber, messageText) {
         console.error(`Error forwarding message to WhatsApp: ${error}`);
     }
 }
-
+//
 // 9. Start Server
 // Start the server
 app.listen(3000, () => console.log("Server started on port 3000"));
