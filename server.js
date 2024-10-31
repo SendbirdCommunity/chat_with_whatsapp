@@ -205,7 +205,7 @@ async function sendMessageToMerchant(userId, channelUrl, message) {
             user_id: userId,
             message: message
         });
-        console.log(`Message sent to merchant ${merchantId} on Sendbird`);
+        console.log(`Message sent to merchant on Sendbird`);
     } catch (error) {
         console.log(`Error sending message to merchant on Sendbird: ${error}`);
     }
