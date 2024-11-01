@@ -136,6 +136,7 @@ app.post("/webhook/sendbird", async (req, res) => {
         const sender = event.sender.user_id
 
         const phoneNumber = extractPhoneNumberFromChannelUrl(channel_url);
+        
         console.log(`Forwarding message to ${phoneNumber}: ${messageText}`);
         if (!channelMap[event.sender.user_id]) {
             forwardMessageToWhatsApp(phoneNumber, messageText);
@@ -200,6 +201,7 @@ async function handleTextMessage(message) {
             await createChannelOnSendbird(userId, merchantId);
 
         }
+      
         await sendMarkerMessage(userId, merchantId);
     } else {
         console.log("Sending user message to merchant");
@@ -275,6 +277,7 @@ async function sendMessageToMerchant(userId, channelUrl, message) {
 
 // Send Marker Message to User on WhatsApp and Merchant on Sendbird
 async function sendMarkerMessage(userId, merchantId) {
+    const targetPhoneNumber = decrypt(userId)
     try {
         await sendbirdAxios.post(`/group_channels/iswhatsapp_${merchantId}_${userId}/messages`, {
             user_id: userId,
@@ -289,7 +292,7 @@ async function sendMarkerMessage(userId, merchantId) {
             `https://graph.facebook.com/v20.0/${WHATSAPP_PHONE_ID}/messages`,
             {
                 messaging_product: "whatsapp",
-                to: userId,
+                to: targetPhoneNumber,
                 type: "text",
                 text: {
                     body: `Marker message for conversation with merchant ${merchantId}`
