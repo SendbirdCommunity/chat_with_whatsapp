@@ -12,7 +12,7 @@ let channelMap = {};
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Must be 32 characters (256 bits)
 const IV = process.env.IV; // Must be 16 characters (128 bits)
 
-// Use these if you need to generate random keys to use. 
+// Use these if you need to generate random keys to use.
 // const key = CryptoJS.lib.WordArray.random(32).toString(CryptoJS.enc.Hex); // 32 bytes (256 bits) -> 64 hex characters
 // const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex); // 16 bytes (128 bits) -> 32 hex characters
 
@@ -136,7 +136,7 @@ app.post("/webhook/sendbird", async (req, res) => {
         const sender = event.sender.user_id
 
         const phoneNumber = extractPhoneNumberFromChannelUrl(channel_url);
-        
+
         console.log(`Forwarding message to ${phoneNumber}: ${messageText}`);
         if (!channelMap[event.sender.user_id]) {
             forwardMessageToWhatsApp(phoneNumber, messageText);
@@ -168,8 +168,8 @@ function extractPhoneNumberFromChannelUrl(channelUrl) {
 
 // Parse Webhook Data and Process Each Entry
 async function parseWebhookData(entries) {
-    entries.forEach(async (entry) => {
-        entry.changes.forEach(async (change) => {
+    for (const entry of entries) {
+        for (const change of entry.changes) {
             console.log("Field:", change.field);
             const { contacts, messages } = change.value;
             try {
@@ -183,8 +183,8 @@ async function parseWebhookData(entries) {
             } catch (e) {
                 console.log("non_message_webhook", entry);
             }
-        });
-    });
+        }
+    }
 }
 
 // Handle Text Message by Extracting Chat Code and Managing Sendbird Channels/Users
@@ -201,7 +201,7 @@ async function handleTextMessage(message) {
             await createChannelOnSendbird(userId, merchantId);
 
         }
-      
+
         await sendMarkerMessage(userId, merchantId);
     } else {
         console.log("Sending user message to merchant");
@@ -243,11 +243,11 @@ async function createUserOnSendbird(userId) {
 
 // Create a New Channel on Sendbird
 async function createChannelOnSendbird(userId, merchantId) {
-  
+
     const channelUrl = `iswhatsapp_${merchantId}_${userId}`;
     console.log("channel_url", channelUrl)
     try {
-        await sendbirdAxios.post("/group_channels", { 
+        await sendbirdAxios.post("/group_channels", {
             user_ids: [userId, merchantId],
             name: "WhatsApp",
             channel_url: channelUrl
@@ -255,7 +255,7 @@ async function createChannelOnSendbird(userId, merchantId) {
         console.log("Channel created!");
         updateChannelMap(userId, channelUrl);
     } catch (error) {
-        
+
         console.log(`Error creating channel: ${error}`);
     }
 }
